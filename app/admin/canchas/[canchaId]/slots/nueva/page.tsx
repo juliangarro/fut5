@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CrearSlotForm } from "@/components/CrearSlotForm";
+import { SelectorCancha } from "@/components/admin/SelectorCancha";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default async function NuevoSlotPage({
   params,
@@ -28,6 +31,12 @@ export default async function NuevoSlotPage({
 
   if (!cancha || cancha.admin_id !== user.id) notFound();
 
+  const { data: misCanchas } = await supabase
+    .from("canchas")
+    .select("id, nombre")
+    .eq("admin_id", user.id)
+    .order("created_at", { ascending: true });
+
   const hoy = new Date().toISOString().slice(0, 10);
   const { data: slots } = await supabase
     .from("slots")
@@ -39,7 +48,24 @@ export default async function NuevoSlotPage({
 
   return (
     <div className="flex max-w-lg flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Nuevo horario — {cancha.nombre}</h1>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold">Horarios — {cancha.nombre}</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            nativeButton={false}
+            render={<Link href={`/admin/canchas/${canchaId}/info`} />}
+          >
+            Info de la cancha
+          </Button>
+        </div>
+        <SelectorCancha
+          canchas={misCanchas ?? []}
+          canchaActualId={canchaId}
+          sufijoRuta="slots/nueva"
+        />
+      </div>
       {creado === "1" && (
         <p className="rounded-xl border border-success/30 bg-success/10 px-4 py-2 text-sm text-success">
           Horario creado.

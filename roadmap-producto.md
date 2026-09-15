@@ -8,6 +8,11 @@
 
 ## Fase 0 — Look & feel: que se vea como un negocio real
 
+> **#1, #3 y parte del #2 ejecutados el 2026-09-15** (fotos, amenidades,
+> identidad visual de la landing) — ver DECISIONS.md. Queda pendiente #4
+> (guía en estados vacíos de Admin) y seguir afinando #2 (la landing tiene
+> ilustración ahora, sigue sin logo/ícono de marca propio).
+
 La app funciona, pero se ve vacía. Para un Futbolero eligiendo dónde jugar
 ₡15,000, "vacío" se lee como "no confío en esto".
 

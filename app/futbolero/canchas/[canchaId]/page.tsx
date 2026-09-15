@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { RatingResumen } from "@/components/shared/RatingResumen";
 import { SlotPicker } from "@/components/shared/SlotPicker";
+import { GaleriaFotos } from "@/components/shared/GaleriaFotos";
+import { AmenidadesGrid } from "@/components/shared/AmenidadesGrid";
+import { parsearAmenidades } from "@/lib/amenidades";
 
 export default async function CanchaDetailPage({
   params,
@@ -16,11 +19,16 @@ export default async function CanchaDetailPage({
 
   const { data: cancha } = await supabase
     .from("canchas")
-    .select("id, nombre, descripcion, politica_cancelacion, rating_promedio")
+    .select("id, nombre, descripcion, politica_cancelacion, rating_promedio, amenidades, fotos")
     .eq("id", canchaId)
     .single();
 
   if (!cancha) notFound();
+
+  const fotoUrls = (cancha.fotos ?? []).map(
+    (path) => supabase.storage.from("fotos-cancha").getPublicUrl(path).data.publicUrl
+  );
+  const amenidades = parsearAmenidades(cancha.amenidades);
 
   const hoy = new Date().toISOString().slice(0, 10);
   const fechaLimite = new Date();
@@ -40,6 +48,8 @@ export default async function CanchaDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <GaleriaFotos urls={fotoUrls} alt={cancha.nombre} />
+
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">{cancha.nombre}</h1>
         {cancha.descripcion && (
@@ -57,6 +67,13 @@ export default async function CanchaDetailPage({
           </details>
         )}
       </div>
+
+      {amenidades.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-medium">Amenidades</h2>
+          <AmenidadesGrid amenidades={amenidades} />
+        </div>
+      )}
 
       {error === "slot_no_disponible" && (
         <p className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-2 text-sm text-warning">

@@ -3,6 +3,43 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-15 — Fase 0 de roadmap-producto.md: fotos, amenidades, multi-cancha
+
+- **Info de cancha** (`/admin/canchas/[canchaId]/info`, doc UI/UX 6.4): fotos
+  (hasta 8, bucket público `fotos-cancha` ya existía en la migración
+  `00000000000004` sin ningún flujo que lo usara) + amenidades (checklist
+  fijo de 8 opciones, `lib/amenidades.ts`, guardado como array de strings en
+  `canchas.amenidades` jsonb) + los campos que ya existían en el form de
+  creación.
+- **Selector de cancha** (`components/admin/SelectorCancha.tsx`, doc 6.6)
+  en Info y en Horarios — un admin puede tener más de una `Cancha` (SPEC.md
+  3.2.1) y hasta ahora no había forma de saltar de una a otra sin volver al
+  dashboard. Se oculta solo si el admin tiene una única cancha.
+- **Bug real encontrado en el primer intento** (no lo agarra `npm run
+  build`, solo se ve en runtime): un Server Component no puede pasar una
+  función como prop a un Client Component. `SelectorCancha` originalmente
+  recibía un callback `construirHref(id) => string` desde las páginas
+  server — rompía con "Functions cannot be passed directly to Client
+  Components". Se cambió a pasar un `sufijoRuta: string` y armar el href
+  adentro del client component. Detectado recorriendo la app en el
+  navegador, no leyendo código — otro recordatorio de por qué el paso de
+  verificación manual importa.
+- **`SelectValue` de Base UI no resuelve el label solo.** Sin pasarle un
+  `children` de tipo función, muestra el `value` crudo (el UUID) en vez del
+  nombre de la cancha. Se resolvió con
+  `<SelectValue>{(id) => canchas.find(...)?.nombre}</SelectValue>`. Vale
+  tenerlo en cuenta para cualquier otro `Select` que se agregue — no es
+  automático como uno esperaría viniendo de un `<select>` nativo.
+- **Fotos y amenidades del futbolero-facing** (`GaleriaFotos.tsx` — carrusel
+  con scroll-snap nativo, sin JS — y `AmenidadesGrid.tsx`) se agregaron a
+  `CanchaCard` y al detalle de cancha. Verificado de punta a punta con
+  Supabase real: admin sube una foto y marca 2 amenidades → aparece
+  inmediatamente en Buscar y en el detalle del lado Futbolero.
+- **Landing (`/`) con identidad visual** (`components/CanchaIlustracion.tsx`):
+  SVG simple de una cancha en la paleta de la app — no hay fotografía real
+  disponible para un hero, esto evita dejar la landing vacía sin depender
+  de un asset externo.
+
 ## 2026-09-15 — Dashboard de insights (`/admin/insights`)
 
 Implementa SPEC.md 3.3 (métricas mínimas) + plan-ui-ux-canchas-fut5-cr.md 6.5,

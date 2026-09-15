@@ -11,6 +11,7 @@ type Cancha = {
   nombre: string;
   descripcion: string | null;
   rating_promedio: number;
+  fotoUrl: string | null;
 };
 
 const FILTROS_RATING = [
@@ -62,6 +63,7 @@ export function ListaCanchas({ canchas }: { canchas: Cancha[] }) {
               nombre={cancha.nombre}
               descripcion={cancha.descripcion}
               ratingPromedio={cancha.rating_promedio}
+              fotoUrl={cancha.fotoUrl}
             />
           ))}
         </div>

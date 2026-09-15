@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, ImageOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ export default async function AdminDashboard() {
 
   const { data: canchas } = await supabase
     .from("canchas")
-    .select("id, nombre, rating_promedio")
+    .select("id, nombre, rating_promedio, fotos")
     .eq("admin_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -78,26 +78,50 @@ export default async function AdminDashboard() {
         />
       ) : (
         <ul className="flex flex-col gap-3">
-          {(canchas ?? []).map((cancha) => (
-            <li key={cancha.id}>
-              <Card className="flex-row items-center justify-between px-4 py-3">
-                <div>
-                  <p className="font-medium">{cancha.nombre}</p>
-                  <p className="text-sm text-muted-foreground">
-                    ⭐ {cancha.rating_promedio.toFixed(1)}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  nativeButton={false}
-                  render={<Link href={`/admin/canchas/${cancha.id}/slots/nueva`} />}
-                >
-                  Horarios
-                </Button>
-              </Card>
-            </li>
-          ))}
+          {(canchas ?? []).map((cancha) => {
+            const primeraFoto = cancha.fotos?.[0];
+            const fotoUrl = primeraFoto
+              ? supabase.storage.from("fotos-cancha").getPublicUrl(primeraFoto).data.publicUrl
+              : null;
+            return (
+              <li key={cancha.id}>
+                <Card className="flex-row flex-wrap items-center gap-3 px-3 py-3">
+                  <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                    {fotoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={fotoUrl} alt={cancha.nombre} className="size-full object-cover" />
+                    ) : (
+                      <ImageOff className="size-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{cancha.nombre}</p>
+                    <p className="text-sm text-muted-foreground">
+                      ⭐ {cancha.rating_promedio.toFixed(1)}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      nativeButton={false}
+                      render={<Link href={`/admin/canchas/${cancha.id}/info`} />}
+                    >
+                      Info
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      nativeButton={false}
+                      render={<Link href={`/admin/canchas/${cancha.id}/slots/nueva`} />}
+                    >
+                      Horarios
+                    </Button>
+                  </div>
+                </Card>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
