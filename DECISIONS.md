@@ -3,6 +3,38 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-15 — Callback de invitación/reset de contraseña (`/auth/callback`)
+
+El signup propio (`/register`) solo cubría email+password directo. Faltaba
+manejar el flujo de invitación/magic-link/recuperación de Supabase: el link
+del email redirige al Site URL del proyecto con `?code=...`, y sin una ruta
+que llame a `exchangeCodeForSession` ese código nunca se canjea por sesión —
+la app no tenía cómo terminar de loguear a alguien que llegaba por ese
+camino. Se agregó `app/auth/callback/route.ts` (intercambia el código) y
+`app/auth/set-password/` (formulario para fijar contraseña tras redimir la
+invitación). Como esta app no manda magic links para login normal, cualquier
+llegada a `/auth/callback` es invitación o reset — por eso el `next` default
+es `/auth/set-password`, no el dashboard.
+
+**Gap conocido, no resuelto todavía**: si un `AdminCancha` se invita desde el
+dashboard de Supabase (Authentication → Invite user) en vez de por
+`/register`, el trigger `handle_new_user` no recibe `raw_user_meta_data.rol`
+y le asigna `futbolero` por default (ver migración `00000000000002`). Peor:
+el trigger `evitar_cambio_de_rol` (migración `00000000000003`) bloquea
+*cualquier* UPDATE que cambie `rol`, incluso desde el SQL Editor como
+superusuario, porque el trigger no distingue quién hace el UPDATE. Para
+corregir un rol mal asignado hay que desactivar el trigger a mano:
+```sql
+alter table usuarios disable trigger usuarios_evitar_cambio_rol;
+update usuarios set rol = 'admin_cancha' where id = '<uuid>';
+alter table usuarios enable trigger usuarios_evitar_cambio_rol;
+```
+La solución de fondo es no invitar `AdminCancha`s desde el dashboard de
+Supabase — o construir un flujo de invitación propio que llame
+`admin.inviteUserByEmail(email, { data: { rol, nombre } })` con el service
+role para que el trigger reciba el rol correcto desde el arranque. No
+implementado en este slice.
+
 ## 2026-09-15 — Cron de expiración: 1 vez/día en vez de cada 5 min (stopgap)
 
 Vercel Hobby (plan actual del proyecto) limita los Cron Jobs a como máximo 1

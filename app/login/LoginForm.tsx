@@ -8,11 +8,17 @@ import { login } from "./actions";
 export function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "";
+  const errorUrl = searchParams.get("error");
   const [state, formAction, pending] = useActionState(login, undefined);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 px-6">
       <h1 className="text-2xl font-semibold">Iniciar sesión</h1>
+      {errorUrl === "link_invalido" && (
+        <p className="rounded border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          Ese enlace ya no es válido o expiró. Pedí que te reenvíen la invitación.
+        </p>
+      )}
       <form action={formAction} className="flex flex-col gap-4">
         <input type="hidden" name="next" value={next} />
         <label className="flex flex-col gap-1 text-sm">
