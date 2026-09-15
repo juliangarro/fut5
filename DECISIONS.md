@@ -3,6 +3,26 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-15 — Cron de expiración: 1 vez/día en vez de cada 5 min (stopgap)
+
+Vercel Hobby (plan actual del proyecto) limita los Cron Jobs a como máximo 1
+ejecución por día — `*/5 * * * *` en `vercel.json` rompía el deploy. Se
+cambió a `0 9 * * *` (9:00 UTC = 3:00am hora CR, hora de bajo tráfico) para
+desbloquear el deploy.
+
+**Esto es un stopgap, no la solución final.** Con cron diario, una `Reserva`
+que queda en `pendiente_validacion` sin que el admin la resuelva no se libera
+hasta la próxima corrida (hasta 24h), muy por encima de la ventana de
+retención configurada (default 30 min, ver `configuracion` en la migración
+`00000000000002`). Esto puede dejar un Slot retenido injustamente por horas.
+Antes de operar con canchas reales, resolver con una de estas dos opciones
+(discutidas con el humano a cargo, no decididas unilateralmente):
+1. Disparar `GET /api/cron/expirar-reservas` cada 5 min desde un servicio
+   externo gratuito (cron-job.org, GitHub Actions scheduled workflow) en vez
+   de `vercel.json`.
+2. Actualizar a Vercel Pro ($20/mes — ya presupuestado en SPEC.md 9) y
+   volver a `*/5 * * * *`.
+
 ## 2026-09-15 — Setup inicial + slice vertical "reserva + validación de pago"
 
 - **Nombres de tabla en español, snake_case**: `usuarios`, `canchas`,
