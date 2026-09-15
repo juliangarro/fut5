@@ -3,6 +3,44 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-15 — Rediseño Organic (Turno 2a) — decisiones D1–D13
+
+Ver `plan-rediseno-dale-cancha.md` para el plan completo (secciones 1–4) y
+`design_handoff_dale_cancha/` para el handoff de diseño original. Ninguna
+decisión se discutió con Julián antes de arrancar la Fase 0, así que se
+aplicó el **default recomendado** de cada una, como el plan permite
+explícitamente. Si alguna no es la deseada, se puede revertir en la fase
+correspondiente sin tocar lógica de negocio.
+
+- **D1 — Pantallas de auth:** piel nueva sobre el flujo actual (correo +
+  tarjetas de rol, sin contraseña). `/register` sigue redirigiendo.
+- **D2 — Hoja de pago:** dos pasos sobre las rutas existentes
+  (`reservar/[slotId]` y `.../comprobante`), sin contador en ningún paso.
+- **D3 — Distancia / "Cerca de mí" / dirección:** se omiten. La línea meta
+  usa rating + descripción.
+- **D4 — Precio en la card:** lectura nueva del mínimo de `slots.precio`
+  disponible en los próximos 14 días.
+- **D5 — Pestaña Perfil:** página nueva `/futbolero/perfil`, solo lectura.
+- **D6 — Navegación del admin:** rutas nuevas `/admin/canchas`,
+  `/admin/horarios`, `/admin/mas`.
+- **D7 — Contraste de rellenos con texto:** paleta accesible — `--primary`
+  = terracota 700 `#8c491a`, "Confirmar reserva" en sage 700 `#56633f`.
+  `--brand` (terracota base `#c67139`) queda para acentos sin texto.
+- **D8 — Tema:** solo modo claro; se elimina el bloque `.dark` y
+  `@custom-variant dark`.
+- **D9 — Formatos:** `lib/formato.ts` con `formatearColones` (punto de
+  miles) y fechas en `America/Costa_Rica` ("setiembre").
+- **D10 — Rampa del heatmap:** ajustada (crema → terracota 300/500/700/900)
+  con leyenda "menos → más".
+- **D11 — Bug de "hoy" en UTC:** se corrige en la Fase 0.5, antes de la
+  Fase 6 (`lib/fecha.ts` → `hoyCR()` / `sumarDiasCR()`).
+- **D12 — Rama de trabajo:** rama local `rediseno-organic` (creada en esta
+  fase), commits por fase, merge a `main` al final. `main` hace deploy
+  automático, así que no hay push intermedio.
+- **D13 — Etiqueta "Noche · la más pedida":** se calcula con los slots
+  visibles (franja con mayor proporción de `retenido`/`reservado` en 14
+  días, con al menos 3 ocupados); sin etiqueta si no hay señal clara.
+
 ## 2026-09-15 — Fase 0 de roadmap-producto.md: fotos, amenidades, multi-cancha
 
 - **Info de cancha** (`/admin/canchas/[canchaId]/info`, doc UI/UX 6.4): fotos
