@@ -3,6 +3,53 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-15 — Dashboard de insights (`/admin/insights`)
+
+Implementa SPEC.md 3.3 (métricas mínimas) + plan-ui-ux-canchas-fut5-cr.md 6.5,
+gratis para todos los AdminCancha por ahora — ver plan-monetizacion-admin.md
+sección 3: no gatear nada hasta validar que se usa.
+
+- **Cargada la skill `dataviz`** antes de construir los charts, como pide el
+  propio doc de UI/UX. Ningún chart de esta pantalla necesitó paleta
+  categórica (8 hues + validador): el heatmap es secuencial (un solo hue,
+  claro→oscuro por magnitud — pasos de opacidad sobre `--primary`), el
+  gráfico de ingresos es una sola serie, y "clientes recurrentes" es una
+  proporción binaria con los tokens ya existentes. El validador de paleta
+  categórica no aplica acá (correría en FAIL "by design" contra un ramp
+  secuencial — ver `references/color-formula.md` de la skill).
+- **`StatCard`** sigue el contrato "stat tile" de la skill (label, value,
+  delta con signo y color por dirección×si-es-bueno) — sin sparkline, fuera
+  de alcance por ahora.
+- **Período = fecha del `Slot` (el partido), no `creada_at` de la `Reserva`.**
+  Significa que reservas confirmadas para partidos *futuros* no cuentan como
+  "ingresos del período" hasta que la fecha del partido ya haya pasado — es
+  intencional (el dashboard reporta actividad ya sucedida, no bookings
+  pendientes), pero es una decisión de modelado, no la única válida. Alguien
+  podría preferir que "ingresos confirmados" cuente el momento del pago
+  (`resuelta_at`) en vez de la fecha del partido — revisar si en la práctica
+  el AdminCancha lo encuentra confuso.
+- **Todo se calcula en JS sobre filas ya traídas**, no con agregados SQL
+  (`GROUP BY`, funciones de ventana) — mismo criterio que el resto del
+  proyecto (SPEC.md 10.3, 20 canchas no justifica esa complejidad).
+- **Sin selector de cancha** (doc 6.6 sigue diferido): agrega todas las
+  canchas del admin, mismo patrón que `/admin/validaciones`.
+- **"No-show" de SPEC.md 3.3 no se implementó** — la máquina de estados de
+  `Reserva` (SPEC.md 5.2) nunca definió un estado de no-show, así que no hay
+  dato que agregar. Se muestra solo tasa de cancelación (`cancelada` +
+  `rechazada` + `expirada`). Si se quiere trackear no-show de verdad hace
+  falta un estado nuevo en la máquina de estados — cambio de spec, no de UI.
+- **Exportar CSV** (`/api/insights/exportar`) devuelve filas crudas
+  (cancha/fecha/hora/futbolero/estado/monto) del período, no las métricas
+  agregadas — un admin export típicamente quiere el detalle para su propia
+  contabilidad, no los mismos números que ya ve en pantalla. PDF (que
+  también pide SPEC.md 3.9) no se implementó — CSV cubre el caso de uso real
+  (importar a Excel/Sheets) con mucho menos esfuerzo.
+- **Verificado con datos reales de prueba** (6 reservas confirmadas
+  insertadas vía service role con fechas pasadas distintas, creadas y
+  borradas en la misma sesión): heatmap, gráfico de ingresos por semana,
+  cálculo de recurrencia y exportación CSV — todos correctos contra
+  Supabase real, no solo contra código leído.
+
 ## 2026-09-15 — Ejecución de plan-mejoras.md (revisado antes de ejecutar)
 
 Se revisó plan-mejoras.md antes de implementarlo y se ajustó el alcance:
