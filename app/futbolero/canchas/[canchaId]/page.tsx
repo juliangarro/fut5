@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { RatingStars } from "@/components/shared/RatingStars";
+import { RatingResumen } from "@/components/shared/RatingResumen";
 import { SlotPicker } from "@/components/shared/SlotPicker";
 
 export default async function CanchaDetailPage({
@@ -45,11 +45,8 @@ export default async function CanchaDetailPage({
         {cancha.descripcion && (
           <p className="text-muted-foreground">{cancha.descripcion}</p>
         )}
-        <div className="mt-1 flex items-center gap-1.5">
-          <RatingStars puntaje={Math.round(cancha.rating_promedio)} />
-          <span className="text-sm text-muted-foreground">
-            {cancha.rating_promedio.toFixed(1)}
-          </span>
+        <div className="mt-1">
+          <RatingResumen ratingPromedio={cancha.rating_promedio} />
         </div>
         {cancha.politica_cancelacion && (
           <details className="mt-2 text-sm text-muted-foreground">

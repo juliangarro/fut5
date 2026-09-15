@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CrearSlotForm } from "@/components/CrearSlotForm";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function NuevoSlotPage({
   params,
@@ -39,28 +41,31 @@ export default async function NuevoSlotPage({
     <div className="flex max-w-lg flex-col gap-6">
       <h1 className="text-2xl font-semibold">Nuevo horario — {cancha.nombre}</h1>
       {creado === "1" && (
-        <p className="rounded border border-green-300 bg-green-50 px-4 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+        <p className="rounded-xl border border-success/30 bg-success/10 px-4 py-2 text-sm text-success">
           Horario creado.
         </p>
       )}
-      <CrearSlotForm canchaId={canchaId} />
+      <Card className="px-4">
+        <CrearSlotForm canchaId={canchaId} />
+      </Card>
 
-      <h2 className="mt-4 text-lg font-medium">Próximos horarios</h2>
+      <h2 className="mt-2 text-lg font-medium">Próximos horarios</h2>
       <ul className="flex flex-col gap-2">
         {(slots ?? []).length === 0 && (
-          <li className="text-sm text-zinc-600 dark:text-zinc-400">Todavía no hay horarios.</li>
+          <li className="text-sm text-muted-foreground">Todavía no hay horarios.</li>
         )}
         {(slots ?? []).map((slot) => (
-          <li
-            key={slot.id}
-            className="flex items-center justify-between rounded border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
-          >
-            <span>
-              {new Date(`${slot.fecha}T00:00:00`).toLocaleDateString("es-CR")} ·{" "}
-              {slot.hora_inicio.slice(0, 5)}–{slot.hora_fin.slice(0, 5)} · ₡
-              {slot.precio.toLocaleString("es-CR")}
-            </span>
-            <span className="text-zinc-500">{slot.estado}</span>
+          <li key={slot.id}>
+            <Card className="flex-row items-center justify-between px-4 py-2.5">
+              <span className="text-sm">
+                {new Date(`${slot.fecha}T00:00:00`).toLocaleDateString("es-CR")} ·{" "}
+                {slot.hora_inicio.slice(0, 5)}–{slot.hora_fin.slice(0, 5)} · ₡
+                {slot.precio.toLocaleString("es-CR")}
+              </span>
+              <Badge variant={slot.estado === "disponible" ? "outline" : "secondary"}>
+                {slot.estado}
+              </Badge>
+            </Card>
           </li>
         ))}
       </ul>

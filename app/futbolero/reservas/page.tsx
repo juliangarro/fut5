@@ -1,8 +1,15 @@
-import Link from "next/link";
-import { CalendarSearch } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { EstadoReservaBadge } from "@/components/shared/EstadoReservaBadge";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { ListaReservas, type ReservaConDatos } from "./ListaReservas";
+
+// Activas: todavía necesitan atención o el partido no pasó (creada/en
+// revisión siempre, confirmada solo si la fecha no pasó todavía). Pasadas:
+// todo lo terminal (rechazada/expirada/cancelada) o confirmada con fecha ya
+// jugada — ver plan-ui-ux-canchas-fut5-cr.md 5.7.
+function esActiva(estado: string, fecha: string, hoy: string): boolean {
+  if (estado === "creada" || estado === "pendiente_validacion") return true;
+  if (estado === "confirmada") return fecha >= hoy;
+  return false;
+}
 
 export default async function MisReservasPage() {
   const supabase = await createClient();
@@ -29,44 +36,28 @@ export default async function MisReservasPage() {
 
   const slotPorId = new Map((slots ?? []).map((s) => [s.id, s]));
   const canchaPorId = new Map((canchas ?? []).map((c) => [c.id, c]));
+  const hoy = new Date().toISOString().slice(0, 10);
+
+  const reservasConDatos: ReservaConDatos[] = (reservas ?? []).flatMap((reserva) => {
+    const slot = slotPorId.get(reserva.slot_id);
+    if (!slot) return [];
+    const cancha = canchaPorId.get(slot.cancha_id);
+    return [
+      {
+        id: reserva.id,
+        estado: reserva.estado,
+        canchaNombre: cancha?.nombre ?? "Cancha",
+        fecha: slot.fecha,
+        horaInicio: slot.hora_inicio,
+        activa: esActiva(reserva.estado, slot.fecha, hoy),
+      },
+    ];
+  });
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Mis reservas</h1>
-      {(reservas ?? []).length === 0 ? (
-        <EmptyState
-          icono={CalendarSearch}
-          titulo="Todavía no tenés reservas"
-          descripcion="Buscá una cancha y elegí un horario."
-          accion={{ texto: "Buscar una cancha", href: "/futbolero/canchas" }}
-        />
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {(reservas ?? []).map((reserva) => {
-            const slot = slotPorId.get(reserva.slot_id);
-            const cancha = slot ? canchaPorId.get(slot.cancha_id) : undefined;
-            return (
-              <li key={reserva.id}>
-                <Link
-                  href={`/futbolero/reservas/${reserva.id}`}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:border-primary/40"
-                >
-                  <div>
-                    <p className="font-medium">{cancha?.nombre ?? "Cancha"}</p>
-                    {slot && (
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(`${slot.fecha}T00:00:00`).toLocaleDateString("es-CR")} ·{" "}
-                        {slot.hora_inicio.slice(0, 5)}
-                      </p>
-                    )}
-                  </div>
-                  <EstadoReservaBadge estado={reserva.estado} />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <ListaReservas reservas={reservasConDatos} />
     </div>
   );
 }

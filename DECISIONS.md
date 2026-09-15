@@ -3,6 +3,37 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-15 — Ejecución de plan-mejoras.md (revisado antes de ejecutar)
+
+Se revisó plan-mejoras.md antes de implementarlo y se ajustó el alcance:
+
+- **#2 (nombre del Futbolero) — descartado**, no implementado. Agregar un
+  campo "nombre" al login contradice la instrucción explícita del usuario
+  de mantener el login a solo email. El local-part del email como nombre
+  de display queda como parte aceptada del trade-off temporal.
+- **#5 (tests automatizados) — bajado de alcance.** No se instaló ningún
+  framework de test ni se escribió un test permanente: no hay Supabase
+  local (Docker no disponible en este entorno) y cualquier test tendría que
+  correr contra el proyecto de producción. En cambio, se **verificó la
+  garantía de no-doble-reserva con un script desechable** (dos inserts
+  concurrentes reales vía REST API con service role contra un slot
+  temporal, limpiado después): un insert ganó (201), el otro fue rechazado
+  por el trigger `retener_slot_al_crear_reserva` con el mensaje "no está
+  disponible" — la garantía de SPEC.md 10.2 quedó probada bajo concurrencia
+  real, no solo por lectura de código. La decisión de qué framework de test
+  usar y cómo correrlo contra una DB de test queda pendiente de conversar
+  con el humano a cargo, no se decidió unilateralmente.
+- **#6 (cámara real)** — no se pudo probar, requiere un dispositivo físico.
+
+Implementado: #1 (`lib/obtenerUrlComprobanteFirmada.ts` — loguea el error
+en vez de descartarlo, reintenta una vez), #3 (`RatingResumen.tsx` —
+"Sin calificaciones todavía" cuando `rating_promedio = 0`, que solo puede
+significar cero filas en `calificaciones` ya que `puntaje` está restringido
+a 1-5), #4 (restyle de `admin/canchas/nueva` y `admin/canchas/[id]/slots/nueva`
+con el sistema de diseño), #7 (tabs Activas/Pasadas en Mis Reservas —
+activa = `creada`/`pendiente_validacion` siempre, o `confirmada` con fecha
+no pasada; el resto es pasada).
+
 ## 2026-09-15 — Ejecución de plan-ui-ux-canchas-fut5-cr.md (Fase 0-3)
 
 Se agregó `plan-ui-ux-canchas-fut5-cr.md` (spec de UI/UX completa) al repo y

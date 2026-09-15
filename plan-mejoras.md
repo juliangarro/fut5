@@ -1,5 +1,10 @@
 # Backlog de mejoras — post-QA end-to-end (Fase 0-3 de plan-ui-ux)
 
+> **Estado: ejecutado el 2026-09-15.** Ver DECISIONS.md para el detalle de
+> qué se implementó tal cual, qué se descartó (#2) y qué se bajó de alcance
+> (#5). Este archivo queda como el registro original del hallazgo, no se
+> reescribió retroactivamente.
+
 > Generado tras un recorrido manual real contra el proyecto Supabase de
 > producción (`npm run dev` local + `.env.local`): login simplificado como
 > AdminCancha → crear cancha → crear horario → logout → login como

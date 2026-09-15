@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { obtenerUrlComprobanteFirmada } from "@/lib/obtenerUrlComprobanteFirmada";
 import { ColaValidacion, type ItemCola } from "@/components/ColaValidacion";
 
 // Cola global: agrega pendiente_validacion de TODAS las canchas del admin
@@ -47,13 +48,9 @@ export default async function ValidacionesPage() {
       const slot = slotPorId.get(reserva.slot_id)!;
       const cancha = canchaPorId.get(slot.cancha_id);
       const futbolero = futboleroPorId.get(reserva.futbolero_id);
-      let comprobanteUrlFirmada: string | null = null;
-      if (reserva.comprobante_url) {
-        const { data } = await supabase.storage
-          .from("comprobantes")
-          .createSignedUrl(reserva.comprobante_url, 300);
-        comprobanteUrlFirmada = data?.signedUrl ?? null;
-      }
+      const comprobanteUrlFirmada = reserva.comprobante_url
+        ? await obtenerUrlComprobanteFirmada(supabase, reserva.comprobante_url, reserva.id)
+        : null;
       return {
         reservaId: reserva.id,
         canchaNombre: cancha?.nombre ?? "Cancha",

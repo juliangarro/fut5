@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ImageOff } from "lucide-react";
-import { RatingStars } from "./RatingStars";
+import { RatingResumen } from "./RatingResumen";
 
 export function CanchaCard({
   id,
@@ -36,10 +36,7 @@ export function CanchaCard({
           <p className="line-clamp-2 text-sm text-muted-foreground">{descripcion}</p>
         )}
         <div className="mt-1 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <RatingStars puntaje={Math.round(ratingPromedio)} />
-            <span className="text-sm text-muted-foreground">{ratingPromedio.toFixed(1)}</span>
-          </div>
+          <RatingResumen ratingPromedio={ratingPromedio} />
           {precioDesde != null && (
             <span className="text-sm font-medium text-foreground">
               desde ₡{precioDesde.toLocaleString("es-CR")}
