@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { logout } from "@/app/login/actions";
+import { Button } from "@/components/ui/button";
 
 export function NavBar({
   links,
@@ -7,18 +9,23 @@ export function NavBar({
   links: { href: string; label: string }[];
 }) {
   return (
-    <header className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-      <nav className="flex gap-4 text-sm">
+    <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-6">
+      <nav className="flex gap-4 overflow-x-auto text-sm">
         {links.map((link) => (
-          <Link key={link.href} href={link.href} className="font-medium hover:underline">
+          <Link
+            key={link.href}
+            href={link.href}
+            className="flex min-h-11 shrink-0 items-center font-medium hover:text-primary"
+          >
             {link.label}
           </Link>
         ))}
       </nav>
       <form action={logout}>
-        <button type="submit" className="text-sm text-zinc-600 hover:underline dark:text-zinc-400">
-          Cerrar sesión
-        </button>
+        <Button type="submit" variant="ghost" size="sm" className="text-muted-foreground">
+          <LogOut className="size-4" />
+          Salir
+        </Button>
       </form>
     </header>
   );

@@ -1,14 +1,8 @@
 import Link from "next/link";
+import { CalendarSearch } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-
-const ETIQUETAS_ESTADO: Record<string, string> = {
-  creada: "Esperando pago",
-  pendiente_validacion: "En revisión",
-  confirmada: "Confirmada",
-  rechazada: "Rechazada",
-  expirada: "Expirada",
-  cancelada: "Cancelada",
-};
+import { EstadoReservaBadge } from "@/components/shared/EstadoReservaBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default async function MisReservasPage() {
   const supabase = await createClient();
@@ -39,34 +33,40 @@ export default async function MisReservasPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Mis reservas</h1>
-      {(reservas ?? []).length === 0 && (
-        <p className="text-zinc-600 dark:text-zinc-400">Todavía no tenés reservas.</p>
+      {(reservas ?? []).length === 0 ? (
+        <EmptyState
+          icono={CalendarSearch}
+          titulo="Todavía no tenés reservas"
+          descripcion="Buscá una cancha y elegí un horario."
+          accion={{ texto: "Buscar una cancha", href: "/futbolero/canchas" }}
+        />
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {(reservas ?? []).map((reserva) => {
+            const slot = slotPorId.get(reserva.slot_id);
+            const cancha = slot ? canchaPorId.get(slot.cancha_id) : undefined;
+            return (
+              <li key={reserva.id}>
+                <Link
+                  href={`/futbolero/reservas/${reserva.id}`}
+                  className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:border-primary/40"
+                >
+                  <div>
+                    <p className="font-medium">{cancha?.nombre ?? "Cancha"}</p>
+                    {slot && (
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(`${slot.fecha}T00:00:00`).toLocaleDateString("es-CR")} ·{" "}
+                        {slot.hora_inicio.slice(0, 5)}
+                      </p>
+                    )}
+                  </div>
+                  <EstadoReservaBadge estado={reserva.estado} />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       )}
-      <ul className="flex flex-col gap-3">
-        {(reservas ?? []).map((reserva) => {
-          const slot = slotPorId.get(reserva.slot_id);
-          const cancha = slot ? canchaPorId.get(slot.cancha_id) : undefined;
-          return (
-            <li key={reserva.id}>
-              <Link
-                href={`/futbolero/reservas/${reserva.id}`}
-                className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 hover:border-zinc-400 dark:border-zinc-800 dark:hover:border-zinc-600"
-              >
-                <div>
-                  <p className="font-medium">{cancha?.nombre ?? "Cancha"}</p>
-                  {slot && (
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {new Date(`${slot.fecha}T00:00:00`).toLocaleDateString("es-CR")} ·{" "}
-                      {slot.hora_inicio.slice(0, 5)}
-                    </p>
-                  )}
-                </div>
-                <span className="text-sm font-medium">{ETIQUETAS_ESTADO[reserva.estado]}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
     </div>
   );
 }
