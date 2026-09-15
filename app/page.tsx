@@ -24,7 +24,7 @@ export default async function Home() {
       <p className="text-muted-foreground">
         Reservá tu cancha y pagá por SINPE Móvil, sin vueltas.
       </p>
-      <Button size="lg" className="h-11 px-6" render={<Link href="/login" />}>
+      <Button size="lg" className="h-11 px-6" nativeButton={false} render={<Link href="/login" />}>
         Entrar
       </Button>
     </div>

@@ -135,6 +135,7 @@ export function SlotPicker({ canchaId, slots }: { canchaId: string; slots: SlotP
           <Button
             size="lg"
             className="h-11 w-full max-w-md mx-auto flex"
+            nativeButton={false}
             render={<Link href={`/futbolero/canchas/${canchaId}/reservar/${slotSeleccionado.id}`} />}
           >
             Continuar con este horario

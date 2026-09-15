@@ -66,7 +66,11 @@ export default async function ResumenPagoPage({
           <p className="text-sm text-muted-foreground">
             Alguien más lo reservó mientras lo mirabas. Elegí otro horario.
           </p>
-          <Button render={<Link href={`/futbolero/canchas/${canchaId}`} />} className="mt-2 w-fit">
+          <Button
+            render={<Link href={`/futbolero/canchas/${canchaId}`} />}
+            nativeButton={false}
+            className="mt-2 w-fit"
+          >
             Ver otros horarios
           </Button>
         </Card>

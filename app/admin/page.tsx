@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Mis canchas</h2>
-        <Button variant="outline" size="sm" render={<Link href="/admin/canchas/nueva" />}>
+        <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/admin/canchas/nueva" />}>
           + Nueva cancha
         </Button>
       </div>
@@ -90,6 +90,7 @@ export default async function AdminDashboard() {
                 <Button
                   variant="outline"
                   size="sm"
+                  nativeButton={false}
                   render={<Link href={`/admin/canchas/${cancha.id}/slots/nueva`} />}
                 >
                   Horarios

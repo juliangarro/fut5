@@ -38,6 +38,7 @@ export default async function SubirComprobantePage({
           </p>
           <Button
             render={<Link href={`/futbolero/canchas/${canchaId}/reservar/${slotId}`} />}
+            nativeButton={false}
             className="w-fit"
           >
             Volver

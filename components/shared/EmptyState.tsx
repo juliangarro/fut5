@@ -28,7 +28,7 @@ export function EmptyState({
         {descripcion && <p className="mt-1 text-sm text-muted-foreground">{descripcion}</p>}
       </div>
       {accion && (
-        <Button render={<Link href={accion.href} />} className="mt-2">
+        <Button render={<Link href={accion.href} />} nativeButton={false} className="mt-2">
           {accion.texto}
         </Button>
       )}
