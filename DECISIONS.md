@@ -3,6 +3,40 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-15 — Fix: `.env.example` nunca se había commiteado
+
+El `.gitignore` que genera `create-next-app` trae `.env*`, que sin querer
+también ignora `.env.example` (el archivo plantilla, sin secretos, que SÍ
+debe estar en el repo). Nunca se detectó porque `git status` simplemente no
+lo mostraba. Se agregó `!.env.example` como excepción. Además, en algún
+punto se pegaron credenciales reales de Supabase (URL, anon key, service
+role key) directamente en `.env.example` en vez de `.env.local` — como el
+archivo nunca se commiteó, no hubo exposición real en GitHub, pero se
+movieron esos valores a `.env.local` (si el service role key te preocupa
+igual, rotarlo desde Supabase Dashboard → Settings → API es gratis y rápido).
+`.env.example` quedó de nuevo con placeholders vacíos.
+
+## 2026-09-15 — Login simplificado sin contraseña (temporal)
+
+A pedido explícito: se reemplazó el login/registro con contraseña por un
+flujo de un solo paso — email + tipo de cuenta (Futbolero/AdminCancha), sin
+verificar que quien escribe el email sea su dueño. Implementación en
+`app/login/actions.ts` (`entrar`): usa el service role para crear el usuario
+si no existe (`admin.createUser` con `email_confirm: true`, sin contraseña) y
+generar un magic link (`admin.generateLink({ type: 'magiclink' })`), y lo
+canjea en el mismo request con `verifyOtp({ type: 'magiclink', token_hash })`
+sobre el cliente anon-key ligado a cookies — nunca se manda ni se espera un
+email. Un usuario que ya existe entra directo con el rol que ya tenía
+(ignora el radio button si no coincide); no se puede cambiar el rol desde
+acá (ver trigger `evitar_cambio_de_rol`, migración `00000000000003`).
+
+**Esto es intencionalmente inseguro y temporal.** Cualquiera que sepa el
+email de otra persona puede entrar a su cuenta — no hay ninguna prueba de
+identidad. El login/registro con contraseña original (SPEC.md 3.1.1) sigue
+en `app/login/actions.ts` (función `login`, comentada) y en el historial de
+git de `app/register/` — reactivarlo antes de operar con canchas/usuarios
+reales. `/register` ahora solo redirige a `/login`.
+
 ## 2026-09-15 — Callback de invitación/reset de contraseña (`/auth/callback`)
 
 El signup propio (`/register`) solo cubría email+password directo. Faltaba

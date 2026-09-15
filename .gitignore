@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — .env.example es la excepción: es una plantilla sin secretos
+# reales y está pensada para comitearse (ver DECISIONS.md).
 .env*
+!.env.example
 
 # vercel
 .vercel

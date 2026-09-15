@@ -23,17 +23,9 @@ export default async function Home() {
       <p className="text-zinc-600 dark:text-zinc-400">
         Reservá tu cancha y pagá por SINPE Móvil, sin vueltas.
       </p>
-      <div className="flex gap-4">
-        <Link href="/login" className="rounded bg-black px-5 py-2.5 text-white dark:bg-white dark:text-black">
-          Iniciar sesión
-        </Link>
-        <Link
-          href="/register"
-          className="rounded border border-zinc-300 px-5 py-2.5 dark:border-zinc-700"
-        >
-          Crear cuenta
-        </Link>
-      </div>
+      <Link href="/login" className="rounded bg-black px-5 py-2.5 text-white dark:bg-white dark:text-black">
+        Entrar
+      </Link>
     </div>
   );
 }
