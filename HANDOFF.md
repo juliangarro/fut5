@@ -183,6 +183,43 @@ trabajando.
 - Login: solo email, sin contraseña (ver arriba) — entrar con cualquiera
   de estos emails entra directo a esa cuenta.
 
+### Simulación de puesta en producción (2026-09-15, pedida explícitamente)
+
+3 AdminCancha nuevos, cada uno con su propia cancha y horarios, más 3
+Futboleros que reservaron y completaron el flujo completo (pago SINPE +
+comprobante + validación) contra el proyecto Supabase real — no datos
+sintéticos insertados por script, todo hecho navegando la app como lo haría
+un usuario real.
+
+**Admins:**
+- `admin.estadio.dalecancha@example.com` — Cancha El Estadio (Heredia),
+  id `1f146320-1f6c-4457-a052-bb52043e5997`, 3 horarios (16-18/9).
+- `admin.polideportivo.dalecancha@example.com` — Polideportivo Norte
+  (Alajuela), id `69574c8e-05ce-4c99-bcdc-6c04e27442dd`, 2 horarios.
+- `admin.villafut5.dalecancha@example.com` — Villa Fut5 (Cartago), id
+  `fb7b4345-f2db-43d4-956e-f736aafdc4f6`, 2 horarios.
+
+**Futboleros:**
+- `gerardo.futbolero.dalecancha@example.com` — reservó 2 veces (El Estadio
+  y Polideportivo Norte, distintas canchas) → cliente recurrente real en
+  los datos de Estadísticas.
+- `andrea.futbolera.dalecancha@example.com` — reservó Polideportivo Norte.
+- `kevin.futbolero.dalecancha@example.com` — reservó Villa Fut5.
+
+**Resultado:** 4 reservas creadas, 3 `confirmada` + 1 `rechazada` (Villa
+Fut5, motivo real: "El monto del comprobante no coincide con el precio del
+horario...") — se verificó que el Futbolero ve el motivo exacto en
+"Mis reservas → Pasadas" y que cada AdminCancha solo ve las reservas de su
+propia cancha en Validaciones (aislamiento entre canchas probado, no solo
+asumido).
+
+Nota de tooling: `computer` → `type` fue poco confiable para el campo de
+email en este entorno (una vez escribió "ju@de" en vez del email completo,
+probablemente autofill del navegador interfiriendo) — `form_input` (o
+`javascript_tool` seteando `.value` + disparando el evento `input`) fue
+consistentemente confiable. Preferir eso para cualquier campo de texto en
+sesiones futuras de este tipo.
+
 ## Cómo verificar cambios (patrón usado toda la sesión)
 
 1. `npm run lint && npm run build` primero siempre.
