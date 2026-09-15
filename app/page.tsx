@@ -23,7 +23,7 @@ export default async function Home() {
     <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-8 px-6 py-12 text-center">
       <CanchaIlustracion className="mx-auto h-auto w-full max-w-64 text-primary" />
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold text-balance">Canchas Fútbol 5 — Costa Rica</h1>
+        <h1 className="text-3xl font-semibold text-balance">Dale Cancha</h1>
         <p className="text-muted-foreground">
           Reservá tu cancha y pagá por SINPE Móvil, sin vueltas.
         </p>

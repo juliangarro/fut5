@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Canchas Fútbol 5 CR",
+  title: "Dale Cancha",
   description: "Reservá canchas de fútbol 5 en Costa Rica y pagá por SINPE Móvil.",
 };
 

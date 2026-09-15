@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { ComprobanteUploader } from "@/components/shared/ComprobanteUploader";
-import { EstadoReservaBadge } from "@/components/shared/EstadoReservaBadge";
+import { EstadoReservaBadge, ETIQUETA_ESTADO_RESERVA } from "@/components/shared/EstadoReservaBadge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -54,7 +54,7 @@ export function ReservaEstado({
         (payload) => {
           const nueva = payload.new as ReservaVista;
           if (nueva.estado !== reserva.estado) {
-            toast.info(`Tu reserva pasó a: ${nueva.estado.replace("_", " ")}`);
+            toast.info(`Tu reserva pasó a: ${ETIQUETA_ESTADO_RESERVA[nueva.estado]}`);
           }
           setReserva(nueva);
         }

@@ -1,9 +1,9 @@
 import { NavBar } from "@/components/NavBar";
 
 const LINKS = [
-  { href: "/admin", label: "Dashboard" },
+  { href: "/admin", label: "Panel" },
   { href: "/admin/validaciones", label: "Validaciones" },
-  { href: "/admin/insights", label: "Insights" },
+  { href: "/admin/insights", label: "Estadísticas" },
   { href: "/admin/canchas/nueva", label: "Nueva cancha" },
 ];
 

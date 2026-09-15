@@ -34,7 +34,7 @@ export function StatCard({
           )}
         >
           {esPositivo ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
-          {Math.abs(delta!).toFixed(0)}% vs período anterior
+          {Math.abs(delta!).toFixed(0)}% respecto al período anterior
         </p>
       )}
     </Card>

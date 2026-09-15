@@ -36,7 +36,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <h1 className="text-2xl font-semibold">Panel</h1>
 
       <Link href="/admin/validaciones">
         <Card

@@ -4,8 +4,14 @@
 > quedó desactualizado porque ya se ejecutó el trabajo pendiente, borrarlo
 > o reemplazarlo — no es un documento permanente como SPEC.md/DECISIONS.md,
 > es una foto del estado a mitad de tarea.
+>
+> **Actualización**: el rename a "Dale Cancha" + la limpieza de copy de la
+> tabla de abajo ya se ejecutaron y verificaron (build limpio, revisado en
+> el navegador, cero errores de consola en tabs nuevas). El resto de este
+> documento (estado del proyecto, bugs encontrados, próximos pasos) sigue
+> vigente — solo el "objetivo inmediato" de esta sección quedó completado.
 
-## Objetivo inmediato (acordado con el usuario, NO ejecutado todavía)
+## Objetivo inmediato (acordado con el usuario, ya ejecutado y verificado)
 
 Dos tareas simples, aprobadas en la conversación pero sin tocar código aún:
 

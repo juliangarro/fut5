@@ -51,7 +51,7 @@ export function LoginForm() {
               <Label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2 has-data-checked:border-primary has-data-checked:bg-primary/5">
                 <RadioGroupItem value="admin_cancha" />
                 <span>
-                  <span className="font-medium">AdminCancha</span>
+                  <span className="font-medium">Dueño de cancha</span>
                   <span className="block text-xs text-muted-foreground">
                     Administro una o más canchas
                   </span>
@@ -59,11 +59,6 @@ export function LoginForm() {
               </Label>
             </RadioGroup>
           </fieldset>
-
-          <p className="text-xs text-muted-foreground">
-            Si tu email ya tiene una cuenta, entrás con el tipo que ya tenías asignado, aunque
-            elijas otro acá.
-          </p>
 
           {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 

@@ -44,6 +44,13 @@ const CONFIG: Record<
   },
 };
 
+// Reusado fuera de este componente (ej. el toast de cambio de estado en
+// ReservaEstado.tsx) para nunca mostrarle al usuario el valor crudo del
+// enum de la base de datos.
+export const ETIQUETA_ESTADO_RESERVA: Record<EstadoReserva, string> = Object.fromEntries(
+  Object.entries(CONFIG).map(([estado, { texto }]) => [estado, texto])
+) as Record<EstadoReserva, string>;
+
 export function EstadoReservaBadge({
   estado,
   className,
