@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Canchas Fútbol 5 — Costa Rica
 
-## Getting Started
+PWA de reservas para canchas de fútbol 5, con pago manual por SINPE Móvil.
+Ver [SPEC.md](./SPEC.md) para el producto completo y [DECISIONS.md](./DECISIONS.md)
+para decisiones de diseño tomadas durante la implementación.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Next.js (App Router) + TypeScript + Tailwind, sobre Supabase (Postgres +
+Auth + Storage + Realtime). Ver SPEC.md sección 6.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Creá un proyecto en [supabase.com](https://supabase.com) (o corré uno
+   local con `npx supabase start`, requiere Docker).
+2. Copiá `.env.example` a `.env.local` y completá las credenciales del
+   proyecto (Project Settings → API).
+3. Aplicá las migraciones:
+   ```bash
+   npx supabase link --project-ref <tu-project-ref>
+   npx supabase db push
+   ```
+   o, en local: `npx supabase start` (aplica `supabase/migrations/*.sql`
+   automáticamente).
+4. Instalá dependencias y corré el servidor de desarrollo:
+   ```bash
+   npm install
+   npm run dev
+   ```
+5. **Importante**: las migraciones en `supabase/migrations/` nunca se
+   corrieron contra una base real durante esta sesión (sin Docker
+   disponible en el entorno de desarrollo). Revisalas antes de aplicarlas
+   a un proyecto real — ver la advertencia al final de DECISIONS.md.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Slice vertical implementado
 
-## Learn More
+Reserva de un Slot → subida de comprobante SINPE → validación manual del
+AdminCancha → confirmación/rechazo, con estado en tiempo real para el
+Futbolero (SPEC.md secciones 3 y 5). Incluye:
 
-To learn more about Next.js, take a look at the following resources:
+- Registro/login por email+password, con selección de rol (Futbolero /
+  AdminCancha).
+- Futbolero: buscar canchas, ver horarios disponibles (próximos 14 días),
+  reservar un Slot, subir comprobante, ver estado en tiempo real, cancelar
+  antes de subir comprobante, ver "mis reservas".
+- AdminCancha: crear cancha, crear horarios (Slots) individuales, cola de
+  validación con comprobante (URL firmada, expira en 5 min), confirmar o
+  rechazar con motivo.
+- Expiración automática de reservas sin validar dentro de la ventana de
+  retención (default 30 min, configurable) vía Vercel Cron.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**No implementado todavía** (ver DECISIONS.md): generador automático de
+Slots desde reglas de horario recurrentes, OAuth social, dashboard de
+insights, calificaciones, notificaciones push/email, exportes CSV/PDF.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Verificación manual de este slice
 
-## Deploy on Vercel
+Con un proyecto Supabase configurado y migraciones aplicadas:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Registrar una cuenta AdminCancha → crear una cancha → crear un slot para
+   mañana.
+2. Registrar una segunda cuenta (otra sesión/navegador) como Futbolero →
+   buscar la cancha → reservar el slot → confirmar que aparecen el monto y
+   el número SINPE.
+3. Subir cualquier imagen como comprobante → confirmar que el estado pasa a
+   "Comprobante en revisión" sin recargar la página (realtime).
+4. Desde la cuenta AdminCancha, ir a la cola de validación de esa cancha →
+   ver la imagen del comprobante → confirmar la reserva.
+5. Volver a la pestaña del Futbolero → confirmar que el estado cambia a
+   "Confirmada" sin recargar.
+6. Repetir con "Rechazar" (requiere motivo) y confirmar que el Futbolero ve
+   el motivo.
+7. Con Docker corriendo, correr `npx supabase db reset` para validar que
+   las migraciones aplican limpio de cero.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Este flujo **no se ejecutó en esta sesión** por falta de Docker/proyecto
+Supabase conectado — queda como el primer paso de verificación pendiente.
