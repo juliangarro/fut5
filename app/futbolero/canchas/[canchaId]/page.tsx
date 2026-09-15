@@ -5,6 +5,7 @@ import { SlotPicker } from "@/components/shared/SlotPicker";
 import { GaleriaFotos } from "@/components/shared/GaleriaFotos";
 import { AmenidadesGrid } from "@/components/shared/AmenidadesGrid";
 import { parsearAmenidades } from "@/lib/amenidades";
+import { hoyCR, sumarDiasCR } from "@/lib/fecha";
 
 export default async function CanchaDetailPage({
   params,
@@ -30,10 +31,8 @@ export default async function CanchaDetailPage({
   );
   const amenidades = parsearAmenidades(cancha.amenidades);
 
-  const hoy = new Date().toISOString().slice(0, 10);
-  const fechaLimite = new Date();
-  fechaLimite.setDate(fechaLimite.getDate() + 14);
-  const en14Dias = fechaLimite.toISOString().slice(0, 10);
+  const hoy = hoyCR();
+  const en14Dias = sumarDiasCR(hoy, 14);
 
   // Trae todos los estados (no solo disponible) para que el SlotPicker
   // pueda mostrar "Ocupado"/"No disponible" en vez de simplemente omitirlos.

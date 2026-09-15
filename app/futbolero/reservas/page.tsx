@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { hoyCR } from "@/lib/fecha";
 import { ListaReservas, type ReservaConDatos } from "./ListaReservas";
 
 // Activas: todavía necesitan atención o el partido no pasó (creada/en
@@ -36,7 +37,7 @@ export default async function MisReservasPage() {
 
   const slotPorId = new Map((slots ?? []).map((s) => [s.id, s]));
   const canchaPorId = new Map((canchas ?? []).map((c) => [c.id, c]));
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = hoyCR();
 
   const reservasConDatos: ReservaConDatos[] = (reservas ?? []).flatMap((reserva) => {
     const slot = slotPorId.get(reserva.slot_id);
