@@ -3,6 +3,44 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-15 — Ejecución de plan-ui-ux-canchas-fut5-cr.md (Fase 0-3)
+
+Se agregó `plan-ui-ux-canchas-fut5-cr.md` (spec de UI/UX completa) al repo y
+se ejecutó el plan aprobado en `/Users/juliangarro/.claude/plans/soft-knitting-jellyfish.md`
+— sistema de diseño + componentes compartidos + camino crítico Futbolero +
+cola de validación global del AdminCancha. Resumen de lo implementado y lo
+diferido (ver ese archivo de plan para el detalle completo de cada fase):
+
+- **Sistema de diseño**: shadcn/ui (preset `base-nova`, primitivas Base UI —
+  no Radix; usar prop `render={<Link .../>}`, no `asChild`), Inter vía
+  `next/font`, paleta semántica de doc 2.1 sobreescrita en `app/globals.css`
+  bajo `@theme` (no hay `tailwind.config.ts`, Tailwind v4 es CSS-first).
+- **URLs**: se mantuvo el prefijo `/futbolero/...` / `/admin/...` en vez de
+  las rutas sin prefijo del doc — decisión tomada con el usuario para no
+  romper el middleware de guard-por-rol ya probado.
+- **Momento de creación de la `Reserva` cambió**: antes se creaba al tocar
+  un `Slot`; ahora se crea recién al confirmar "Ya pagué, subir comprobante"
+  en la nueva pantalla de resumen (`app/futbolero/canchas/[canchaId]/reservar/[slotId]/`),
+  vía Server Action ligada al submit — deliberadamente NO es un Link ni pasa
+  por el Server Component de la siguiente pantalla, porque el prefetch de
+  Next.js renderiza esa página especulativamente al pasar el mouse/hacer
+  scroll, y un mutate ahí crearía reservas fantasma. La pantalla de subir
+  comprobante (`.../comprobante/`) es de solo lectura: busca una reserva
+  activa existente para ese slot+usuario, nunca crea una si no la encuentra.
+- **Cola de validación pasó de por-cancha a global**: `/admin/validaciones`
+  agrega pendiente_validacion de todas las canchas del admin (doc 6.2). La
+  ruta vieja `/admin/canchas/[id]/validacion` ahora solo redirige a la
+  nueva, para no romper links ya compartidos.
+- **Diferido explícitamente, no construido**: geolocalización/filtros de
+  distancia y precio en Buscar, Calificar cancha (no hay escritura a
+  `calificaciones` conectada desde UI), Perfil (Futbolero y AdminCancha),
+  vista calendario semanal de horarios (se mantiene el form simple actual),
+  selector de canchas, CRUD completo de info de cancha (fotos/amenidades),
+  dashboard de insights con gráficos, banner de offline, auditoría de
+  accesibilidad dedicada. Los forms de admin `canchas/nueva` y
+  `canchas/[id]/slots/nueva` tampoco se restylaron (fuera del alcance
+  aprobado) — siguen con las clases Tailwind planas de antes.
+
 ## 2026-09-15 — Fix: `.env.example` nunca se había commiteado
 
 El `.gitignore` que genera `create-next-app` trae `.env*`, que sin querer

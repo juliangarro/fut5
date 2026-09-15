@@ -1,10 +1,19 @@
 "use client";
 
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { CircleCheckBig } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { cn } from "@/lib/utils";
 
-type ItemCola = {
+export type ItemCola = {
   reservaId: string;
+  canchaNombre: string;
   futboleroNombre: string;
   futboleroTelefono: string | null;
   fecha: string;
@@ -12,12 +21,42 @@ type ItemCola = {
   horaFin: string;
   monto: number;
   comprobanteUrlFirmada: string | null;
+  expiraAt: string | null;
 };
+
+function minutosRestantes(expiraAt: string | null): number | null {
+  if (!expiraAt) return null;
+  return Math.round((new Date(expiraAt).getTime() - Date.now()) / 60000);
+}
+
+function ContadorExpiracion({ expiraAt }: { expiraAt: string | null }) {
+  const [minutos, setMinutos] = useState(() => minutosRestantes(expiraAt));
+
+  useEffect(() => {
+    const id = setInterval(() => setMinutos(minutosRestantes(expiraAt)), 15000);
+    return () => clearInterval(id);
+  }, [expiraAt]);
+
+  if (minutos === null) return null;
+  const vencido = minutos <= 0;
+  const porVencer = minutos <= 10;
+
+  return (
+    <span
+      className={cn(
+        "text-xs font-medium",
+        vencido ? "text-danger" : porVencer ? "text-warning" : "text-muted-foreground"
+      )}
+    >
+      {vencido ? "Venciendo…" : `Vence en ${minutos} min`}
+    </span>
+  );
+}
 
 function FilaValidacion({ item }: { item: ItemCola }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [mostrarMotivo, setMostrarMotivo] = useState(false);
+  const [dialogoRechazo, setDialogoRechazo] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -26,9 +65,10 @@ function FilaValidacion({ item }: { item: ItemCola }) {
     const res = await fetch(`/api/reservas/${item.reservaId}/confirmar`, { method: "POST" });
     const json = await res.json();
     if (!res.ok) {
-      setError(json.error ?? "Error al confirmar.");
+      toast.error(json.error ?? "Error al confirmar.");
       return;
     }
+    toast.success("Reserva confirmada");
     startTransition(() => router.refresh());
   }
 
@@ -45,98 +85,103 @@ function FilaValidacion({ item }: { item: ItemCola }) {
     });
     const json = await res.json();
     if (!res.ok) {
-      setError(json.error ?? "Error al rechazar.");
+      toast.error(json.error ?? "Error al rechazar.");
       return;
     }
+    toast.success("Reserva rechazada");
+    setDialogoRechazo(false);
     startTransition(() => router.refresh());
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-      <div className="flex items-start justify-between">
+    <Card className="gap-3 px-4">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-medium">{item.futboleroNombre}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium">{item.futboleroNombre}</p>
+            <Badge variant="outline">{item.canchaNombre}</Badge>
+          </div>
           {item.futboleroTelefono && (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{item.futboleroTelefono}</p>
+            <p className="text-sm text-muted-foreground">{item.futboleroTelefono}</p>
           )}
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-muted-foreground">
             {new Date(`${item.fecha}T00:00:00`).toLocaleDateString("es-CR")} ·{" "}
             {item.horaInicio.slice(0, 5)}–{item.horaFin.slice(0, 5)} · ₡
             {item.monto.toLocaleString("es-CR")}
           </p>
         </div>
+        <ContadorExpiracion expiraAt={item.expiraAt} />
       </div>
 
       {item.comprobanteUrlFirmada && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={item.comprobanteUrlFirmada}
-          alt="Comprobante de pago"
-          className="max-h-96 w-auto rounded border border-zinc-200 object-contain dark:border-zinc-800"
+          alt="Comprobante de pago SINPE"
+          className="max-h-96 w-auto rounded-xl border border-border object-contain"
         />
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="flex gap-3">
+        <Button
+          type="button"
+          disabled={pending}
+          onClick={confirmar}
+          className="h-11 flex-1 bg-success text-success-foreground hover:bg-success/90"
+        >
+          Confirmar
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={pending}
+          onClick={() => setDialogoRechazo(true)}
+          className="h-11 flex-1 border-danger/30 text-danger hover:bg-danger/10"
+        >
+          Rechazar
+        </Button>
+      </div>
 
-      {!mostrarMotivo ? (
-        <div className="flex gap-3">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={confirmar}
-            className="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            Confirmar
-          </button>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => setMostrarMotivo(true)}
-            className="rounded border border-red-300 px-4 py-2 text-sm font-medium text-red-700 disabled:opacity-50 dark:border-red-800 dark:text-red-400"
-          >
-            Rechazar
-          </button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
+      <ConfirmDialog
+        open={dialogoRechazo}
+        onOpenChange={setDialogoRechazo}
+        titulo="Rechazar comprobante"
+        descripcion="El futbolero va a ver este motivo y el horario se libera."
+        textoConfirmar="Confirmar rechazo"
+        onConfirmar={rechazar}
+      >
+        <div className="flex flex-col gap-1.5">
           <textarea
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
-            placeholder="Motivo del rechazo (se lo notificamos al futbolero)"
-            rows={2}
-            className="rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            placeholder="Motivo del rechazo"
+            rows={3}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
-          <div className="flex gap-3">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={rechazar}
-              className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
-              Confirmar rechazo
-            </button>
-            <button
-              type="button"
-              onClick={() => setMostrarMotivo(false)}
-              className="text-sm text-zinc-600 underline dark:text-zinc-400"
-            >
-              Cancelar
-            </button>
-          </div>
+          {error && <p className="text-sm text-danger">{error}</p>}
         </div>
-      )}
-    </li>
+      </ConfirmDialog>
+    </Card>
   );
 }
 
 export function ColaValidacion({ items }: { items: ItemCola[] }) {
   if (items.length === 0) {
-    return <p className="text-zinc-600 dark:text-zinc-400">No hay reservas pendientes de validación.</p>;
+    return (
+      <EmptyState
+        icono={CircleCheckBig}
+        titulo="No hay comprobantes pendientes"
+        descripcion="Estás al día."
+        tono="positivo"
+      />
+    );
   }
   return (
     <ul className="flex flex-col gap-4">
       {items.map((item) => (
-        <FilaValidacion key={item.reservaId} item={item} />
+        <li key={item.reservaId}>
+          <FilaValidacion item={item} />
+        </li>
       ))}
     </ul>
   );
