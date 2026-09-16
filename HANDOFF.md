@@ -22,6 +22,25 @@
 > `button.tsx`/`tabs.tsx`/`ChipFiltro.tsx`/`NavBar.tsx`/`SidebarAdmin.tsx`
 > y algunos labels puntuales) — ver sección 8 del plan para el detalle
 > completo y el alcance exacto del arreglo.
+>
+> **Actualización 2026-09-15, sesión aparte — fix de error handling en
+> comprobante SINPE (cerrado):** reporte del usuario: al subir el
+> comprobante después de reservar, la pantalla "se cerraba" sin ningún
+> alert y después aparecía la fecha como ocupada, sin manera de saber si
+> la subida había funcionado. Causa real: `ComprobanteUploader` no tenía
+> un estado de éxito propio — dependía de que el padre navegara
+> (`onExito`) o de que llegara el evento realtime de `reservas.estado`
+> para reflejar la subida, y si eso tardaba el botón quedaba congelado en
+> "Enviando…" sin avisar nada. De paso se detectaron y arreglaron 2 huecos
+> más en el mismo camino: el `fetch` de subida no tenía timeout (podía
+> colgarse indefinido con conexión inestable) y `cancelarReserva` en
+> `ReservaEstado.tsx` podía lanzar sin que nadie lo capturara si el estado
+> cambiaba mientras el diálogo de confirmación estaba abierto. Arreglado en
+> `components/shared/ComprobanteUploader.tsx` y
+> `components/ReservaEstado.tsx`, rama `fix/comprobante-sinpe-estados` →
+> PR #1 → **mergeado a `main` y pusheado** (`dfea63e`). El usuario hizo el
+> deploy real y confirmó visualmente que se ve bien. Sin tareas pendientes
+> de este hilo.
 
 ## Qué se está haciendo
 
