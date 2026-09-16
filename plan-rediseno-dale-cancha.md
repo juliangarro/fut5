@@ -258,28 +258,28 @@ Orden: **0 → 1 → 2 → 3** (bloquean todo lo demás). **D11** va antes de la
 ### Fase 0 — Preparación
 **Commit:** `chore(rediseño): handoff de diseño + decisiones`
 
-- [ ] Crear la rama local `rediseno-organic` (D12).
-- [ ] Verificar que `design_handoff_dale_cancha/` está en la raíz del repo y agregarlo a git.
-- [ ] Agregar a `DECISIONS.md` una entrada "2026-09-XX — Rediseño Organic (Turno 2a)" con D1–D13 resueltas y un enlace a este plan.
-- [ ] Agregar al inicio de `plan-ui-ux-canchas-fut5-cr.md`, sección 2 (paleta verde e Inter), el aviso: "**Reemplazada por el sistema Organic** — ver plan-rediseno-dale-cancha.md §4". Si no, un agente futuro sigue los tokens viejos.
-- [ ] (Opcional) Capturas "antes" a 390 y 1280 de las pantallas de la sección 8, en `design_handoff_dale_cancha/antes/`. No se commitean si pesan más de 2 MB.
+- [x] Crear la rama local `rediseno-organic` (D12).
+- [x] Verificar que `design_handoff_dale_cancha/` está en la raíz del repo y agregarlo a git.
+- [x] Agregar a `DECISIONS.md` una entrada "2026-09-XX — Rediseño Organic (Turno 2a)" con D1–D13 resueltas y un enlace a este plan.
+- [x] Agregar al inicio de `plan-ui-ux-canchas-fut5-cr.md`, sección 2 (paleta verde e Inter), el aviso: "**Reemplazada por el sistema Organic** — ver plan-rediseno-dale-cancha.md §4". Si no, un agente futuro sigue los tokens viejos.
+- [x] (Opcional) Capturas "antes" a 390 y 1280 de las pantallas de la sección 8, en `design_handoff_dale_cancha/antes/`. No se commitean si pesan más de 2 MB.
 
 ### Fase 0.5 — Fix de fechas (solo si D11 = sí)
 **Commit:** `fix(fechas): calcular "hoy" en hora de Costa Rica`
 
-- [ ] `lib/fecha.ts`: `hoyCR(): string` (YYYY-MM-DD con `Intl.DateTimeFormat("en-CA", { timeZone: "America/Costa_Rica" })`) y `sumarDiasCR(fechaISO, n)`.
-- [ ] Usarlos en `app/futbolero/canchas/[canchaId]/page.tsx` (`hoy` y `en14Dias`) y en `app/futbolero/reservas/page.tsx` (`hoy`).
-- [ ] Verificación: con el reloj del sistema en 19:00 hora CR (o un test manual con fecha simulada), los horarios de esa noche siguen apareciendo.
+- [x] `lib/fecha.ts`: `hoyCR(): string` (YYYY-MM-DD con `Intl.DateTimeFormat("en-CA", { timeZone: "America/Costa_Rica" })`) y `sumarDiasCR(fechaISO, n)`.
+- [x] Usarlos en `app/futbolero/canchas/[canchaId]/page.tsx` (`hoy` y `en14Dias`) y en `app/futbolero/reservas/page.tsx` (`hoy`).
+- [x] Verificación: con el reloj del sistema en 19:00 hora CR (o un test manual con fecha simulada), los horarios de esa noche siguen apareciendo.
 
 ### Fase 1 — Tokens, fuente y tema
 **Archivos:** `app/globals.css`, `app/layout.tsx`, `components/ui/sonner.tsx`
 **Commit:** `feat(ui): tokens Organic + Figtree`
 
-- [ ] Reescribir `globals.css` según la sección 4.1, con los valores de D7 y D10 ya resueltos.
-- [ ] En `layout.tsx`, cambiar `Inter` por `Figtree` (`variable: "--font-sans"`). Agregar `export const viewport = { themeColor: "#f5ead8", viewportFit: "cover" }` después de verificar la API en los docs de Next 16.
-- [ ] `sonner.tsx`: `theme="light"`, quitar `useTheme` (D8) y usar `--border-radius: var(--radius-card)`.
-- [ ] Si D8 = sí, eliminar el bloque `.dark` y `@custom-variant dark`.
-- [ ] Comprobar que la app compila y se ve crema con texto oscuro. Que los componentes todavía se vean "viejos" es esperable.
+- [x] Reescribir `globals.css` según la sección 4.1, con los valores de D7 y D10 ya resueltos.
+- [x] En `layout.tsx`, cambiar `Inter` por `Figtree` (`variable: "--font-sans"`). Agregar `export const viewport = { themeColor: "#f5ead8", viewportFit: "cover" }` después de verificar la API en los docs de Next 16.
+- [x] `sonner.tsx`: `theme="light"`, quitar `useTheme` (D8) y usar `--border-radius: var(--radius-card)`.
+- [x] Si D8 = sí, eliminar el bloque `.dark` y `@custom-variant dark`.
+- [x] Comprobar que la app compila y se ve crema con texto oscuro. Que los componentes todavía se vean "viejos" es esperable.
 
 **Aceptación:** no queda ningún hex fuera de `globals.css` (salvo `themeColor`) y la fuente computada del `body` es Figtree.
 
@@ -288,7 +288,7 @@ Orden: **0 → 1 → 2 → 3** (bloquean todo lo demás). **D11** va antes de la
 
 Ajustar variantes, **sin reescribir** los componentes:
 
-- [ ] `button.tsx`
+- [x] `button.tsx`
   - `rounded-full`; foco con `focus-visible:outline-2 outline-offset-2 outline-ring`, en vez de `ring-3 ring-ring/50`.
   - `default`: `bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active`.
   - `outline` (= "secundario" del diseño): `border-border bg-transparent hover:bg-accent`.
@@ -298,43 +298,43 @@ Ajustar variantes, **sin reescribir** los componentes:
   - Variante **nueva** `success`: `bg-success text-success-foreground hover:bg-sage-800`.
   - **Tamaños con área táctil ≥44px:** `sm` = `h-11 px-4 text-[15px] font-semibold` (hoy mide 28px y se usa 8 veces); `default` = `h-11 px-5 text-base font-semibold`; `lg` = `h-[54px] px-6 text-[17px] font-bold`; `icon` = `size-11`; `icon-lg` = `size-[52px]`.
   - `xs`, `icon-xs` e `icon-sm` pasan a `size-11` o `h-11`. Verificar sus usos con grep.
-- [ ] `input.tsx`: `h-[52px] rounded-full bg-card border-input px-3.5 text-base` y **quitar `md:text-sm`** (16px siempre; también evita el zoom en iOS).
-- [ ] `textarea.tsx`: `rounded-slot bg-card border-input text-base`.
-- [ ] `card.tsx`: `rounded-card bg-card`, sin `ring-1`. Las esquinas internas (`rounded-t-xl` y demás) pasan a `rounded-t-card`. Se mantiene la API (`size`, subcomponentes).
-- [ ] `badge.tsx`: `rounded-full h-auto px-3 py-1.5 text-sm font-semibold [&>svg]:size-[15px]`. Variantes nuevas: `neutral` (`bg-neutral-100 text-neutral-800`), `terracota` (`bg-terracota-100 text-terracota-800`) y `sage` (`bg-sage-100 text-sage-800`).
-- [ ] `tabs.tsx`
+- [x] `input.tsx`: `h-[52px] rounded-full bg-card border-input px-3.5 text-base` y **quitar `md:text-sm`** (16px siempre; también evita el zoom en iOS).
+- [x] `textarea.tsx`: `rounded-slot bg-card border-input text-base`.
+- [x] `card.tsx`: `rounded-card bg-card`, sin `ring-1`. Las esquinas internas (`rounded-t-xl` y demás) pasan a `rounded-t-card`. Se mantiene la API (`size`, subcomponentes).
+- [x] `badge.tsx`: `rounded-full h-auto px-3 py-1.5 text-sm font-semibold [&>svg]:size-[15px]`. Variantes nuevas: `neutral` (`bg-neutral-100 text-neutral-800`), `terracota` (`bg-terracota-100 text-terracota-800`) y `sage` (`bg-sage-100 text-sage-800`).
+- [x] `tabs.tsx`
   - La variante `default` pasa a ser la "píldora": `TabsList` con `bg-card rounded-full p-[5px] h-auto gap-1.5 w-full`.
   - `TabsTrigger` con `min-h-[42px] rounded-full text-[15px] text-neutral-800`; activo con `data-active:bg-primary data-active:text-primary-foreground data-active:font-bold`.
   - La variante `line` queda como está.
-- [ ] `dialog.tsx`: overlay `bg-neutral-900/50`, popup `rounded-[32px] bg-popover shadow-lg p-5`, sin `ring`. Título en 20px bold.
-- [ ] `select.tsx`, `checkbox.tsx`, `radio-group.tsx`: bordes `border-input`, foco `outline-ring`, radio seleccionado `bg-primary` con anillo interno crema.
-- [ ] `skeleton.tsx`: `bg-muted rounded-card`. `label.tsx`: `text-sm text-muted-foreground`.
+- [x] `dialog.tsx`: overlay `bg-neutral-900/50`, popup `rounded-[32px] bg-popover shadow-lg p-5`, sin `ring`. Título en 20px bold.
+- [x] `select.tsx`, `checkbox.tsx`, `radio-group.tsx`: bordes `border-input`, foco `outline-ring`, radio seleccionado `bg-primary` con anillo interno crema.
+- [x] `skeleton.tsx`: `bg-muted rounded-card`. `label.tsx`: `text-sm text-muted-foreground`.
 
 Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar markup en las fases siguientes:
 
-- [ ] `Marca.tsx`: círculo de 34px `bg-brand` con el glifo de pelota del diseño (SVG propio con `currentColor`) y "Dale Cancha" en 700/19px. Acepta `tamaño`.
-- [ ] `BotonVolver.tsx`: `Link` circular de 44px (`bg-card`, o `bg-background` + `shadow-sm` sobre foto), con `ChevronLeft` y `aria-label` obligatorio.
-- [ ] `Aviso.tsx`: `tono: "info" | "exito" | "atencion" | "error"`, con ícono, texto de 14–15px y `rounded-slot`.
+- [x] `Marca.tsx`: círculo de 34px `bg-brand` con el glifo de pelota del diseño (SVG propio con `currentColor`) y "Dale Cancha" en 700/19px. Acepta `tamaño`.
+- [x] `BotonVolver.tsx`: `Link` circular de 44px (`bg-card`, o `bg-background` + `shadow-sm` sobre foto), con `ChevronLeft` y `aria-label` obligatorio.
+- [x] `Aviso.tsx`: `tono: "info" | "exito" | "atencion" | "error"`, con ícono, texto de 14–15px y `rounded-slot`.
   - `error` y `atencion`: `bg-terracota-100 text-terracota-900`.
   - `exito`: `bg-sage-100 text-sage-900`.
   - `info`: `bg-neutral-100 text-neutral-800`.
   - Reemplaza las cajas `border-warning/30 bg-warning/10` (4 lugares) y los `<p className="text-danger">` de error de formulario.
-- [ ] `ChipFiltro.tsx`: `button` de 42px en píldora con `aria-pressed`. Activo con `bg-primary text-primary-foreground font-bold`; inactivo con `border border-border`.
-- [ ] `HojaInferior.tsx`: construida sobre `components/ui/dialog.tsx` (Base UI Dialog), así hereda el manejo de foco y Esc.
+- [x] `ChipFiltro.tsx`: `button` de 42px en píldora con `aria-pressed`. Activo con `bg-primary text-primary-foreground font-bold`; inactivo con `border border-border`.
+- [x] `HojaInferior.tsx`: construida sobre `components/ui/dialog.tsx` (Base UI Dialog), así hereda el manejo de foco y Esc.
   - Popup anclado abajo: `fixed inset-x-0 bottom-0 rounded-t-sheet shadow-lg px-[22px] pt-3.5 pb-[max(30px,env(safe-area-inset-bottom))]`, asa de 44×5px con `aria-hidden`.
   - `max-w-md mx-auto` en desktop.
   - Animación `slide-in-from-bottom` con `motion-reduce:animate-none`.
   - Overlay `bg-neutral-900/42`.
   - Props: `titulo`, `abierta` y `hrefCerrar` (string, no callback: al cerrar hace `router.push(hrefCerrar)` desde adentro).
-- [ ] `BarraAccionInferior.tsx`: barra fija `border-t border-border bg-background px-5 pt-3.5 pb-[max(30px,env(safe-area-inset-bottom))]`, con slot izquierdo y derecho.
-- [ ] `ContadorExpiracion.tsx`: **se extrae** de `ColaValidacion.tsx`, con la misma lógica de minutos cada 15 s. Tag en píldora con ícono `Clock`:
+- [x] `BarraAccionInferior.tsx`: barra fija `border-t border-border bg-background px-5 pt-3.5 pb-[max(30px,env(safe-area-inset-bottom))]`, con slot izquierdo y derecho.
+- [x] `ContadorExpiracion.tsx`: **se extrae** de `ColaValidacion.tsx`, con la misma lógica de minutos cada 15 s. Tag en píldora con ícono `Clock`:
   - más de 20 min: `bg-sage-200 text-sage-900`;
   - de 1 a 20 min: `bg-terracota-200 text-terracota-900`;
   - 0 o menos: "Venciendo…".
   - Prop `formato: "corto" | "largo"` ("Vence en 12 min" / "vence en 12 min").
-- [ ] `FotoCancha.tsx`: `<img>` con clase `washed` y esquinas del contenedor. Sin URL, muestra `CanchaIlustracion`. **No usarlo para comprobantes.**
-- [ ] `Avatar.tsx`: iniciales sobre `bg-sage-300 text-sage-900`, 36px.
-- [ ] `lib/formato.ts` (D9): `formatearColones`, `formatearFechaLarga` ("martes 16 de setiembre"), `formatearDiaCorto` ("sáb 20"), `formatearHora` ("18:00"), `formatearRangoHoras` ("18:00–19:00") e `iniciales(nombre)`. Todo con `timeZone: "America/Costa_Rica"`.
+- [x] `FotoCancha.tsx`: `<img>` con clase `washed` y esquinas del contenedor. Sin URL, muestra `CanchaIlustracion`. **No usarlo para comprobantes.**
+- [x] `Avatar.tsx`: iniciales sobre `bg-sage-300 text-sage-900`, 36px.
+- [x] `lib/formato.ts` (D9): `formatearColones`, `formatearFechaLarga` ("martes 16 de setiembre"), `formatearDiaCorto` ("sáb 20"), `formatearHora` ("18:00"), `formatearRangoHoras` ("18:00–19:00") e `iniciales(nombre)`. Todo con `timeZone: "America/Costa_Rica"`.
 
 **Aceptación:**
 - Ningún `Button` mide menos de 44px de alto.
@@ -345,28 +345,28 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 **Archivos:** `components/NavBar.tsx`, `components/BarraInferior.tsx` (nuevo), `components/admin/SidebarAdmin.tsx` (nuevo), `app/futbolero/layout.tsx`, `app/admin/layout.tsx`, `lib/admin/contarPendientes.ts` (nuevo, solo lectura), `app/futbolero/perfil/page.tsx` (D5), `app/admin/canchas/page.tsx`, `app/admin/horarios/page.tsx`, `app/admin/mas/page.tsx` (D6)
 **Commit:** `feat(ui): barra inferior mobile, header desktop y sidebar admin`
 
-- [ ] **Estructura full-bleed.** Las pantallas nuevas tienen cabeceras de borde a borde: la cabecera arena de Buscar, la foto del detalle y la cabecera tintada del estado. Por eso el `main` de los layouts **pierde el padding horizontal y el `max-w-4xl` en mobile**, y cada página usa su propio contenedor (`px-5`, o `px-[22px]` según la pantalla). En ≥768px, `max-w-5xl mx-auto`.
-- [ ] `lib/admin/contarPendientes.ts`: mueve la lógica de conteo que hoy vive en `app/admin/page.tsx` (canchas → slots → reservas `pendiente_validacion`). Devuelve `{ total, expiraMasProxima }`. La usan el layout y el panel.
-- [ ] **Futbolero, menos de 768px:** `BarraInferior` (client component, usa `usePathname`).
+- [x] **Estructura full-bleed.** Las pantallas nuevas tienen cabeceras de borde a borde: la cabecera arena de Buscar, la foto del detalle y la cabecera tintada del estado. Por eso el `main` de los layouts **pierde el padding horizontal y el `max-w-4xl` en mobile**, y cada página usa su propio contenedor (`px-5`, o `px-[22px]` según la pantalla). En ≥768px, `max-w-5xl mx-auto`.
+- [x] `lib/admin/contarPendientes.ts`: mueve la lógica de conteo que hoy vive en `app/admin/page.tsx` (canchas → slots → reservas `pendiente_validacion`). Devuelve `{ total, expiraMasProxima }`. La usan el layout y el panel.
+- [x] **Futbolero, menos de 768px:** `BarraInferior` (client component, usa `usePathname`).
   - Ítems: Buscar (`Search`, `/futbolero/canchas`), Mis reservas (`Calendar`, `/futbolero/reservas`), Perfil (`User`, `/futbolero/perfil`).
   - Estilo: `bg-card border-t border-border pt-2.5 pb-[max(26px,env(safe-area-inset-bottom))]`.
   - Cada ítem ocupa al menos 48px, con ícono de 24px y label de 12px. El activo va en `text-terracota-700 font-bold` con `aria-current="page"`.
   - **Solo se muestra en las rutas de primer nivel** (las tres de arriba). En detalle, reservar, comprobante y estado no aparece: son pantallas "empujadas", como en el diseño.
   - El `main` reserva espacio abajo (`pb-[calc(84px+env(safe-area-inset-bottom))]`) solo cuando la barra está visible.
-- [ ] **Futbolero, 768px o más:** `NavBar` rediseñado. `Marca` a la izquierda; links en píldora (activo `bg-primary text-primary-foreground`, inactivo `text-neutral-800 hover:bg-accent`); a la derecha `Avatar` y "Salir" (`variant="ghost"`). Fondo `bg-card`, sin borde inferior, esquinas inferiores `rounded-b-header` opcionales.
-- [ ] **Admin, 1024px o más:** `SidebarAdmin`, fijo, de 252px, `bg-card px-[18px] py-[26px] gap-[26px]`.
+- [x] **Futbolero, 768px o más:** `NavBar` rediseñado. `Marca` a la izquierda; links en píldora (activo `bg-primary text-primary-foreground`, inactivo `text-neutral-800 hover:bg-accent`); a la derecha `Avatar` y "Salir" (`variant="ghost"`). Fondo `bg-card`, sin borde inferior, esquinas inferiores `rounded-b-header` opcionales.
+- [x] **Admin, 1024px o más:** `SidebarAdmin`, fijo, de 252px, `bg-card px-[18px] py-[26px] gap-[26px]`.
   - Marca de 18px.
   - Ítems en píldora de 46px: Panel `/admin`, Validaciones `/admin/validaciones`, Horarios `/admin/horarios`, Canchas `/admin/canchas`, Estadísticas `/admin/insights`. El activo va en `bg-primary text-primary-foreground font-bold`.
   - Validaciones muestra el contador a la derecha: píldora de 13px/700, `bg-primary text-primary-foreground`, o `bg-background text-terracota-800` cuando el ítem está activo. Solo aparece si `total > 0`, con `aria-label="3 pendientes"`.
   - Al pie, una ficha de usuario en píldora `bg-background`: Avatar, nombre en 15/700 y "Dueño · N canchas" en 13px. Debajo, "Salir".
-- [ ] **Admin, menos de 1024px:** `BarraInferior` con Panel (`LayoutGrid`), Validaciones (`ClipboardCheck`, con contador), Horarios (`Calendar`) y Más (`Ellipsis` → `/admin/mas`).
-- [ ] Los layouts (Server Components) leen el perfil (`usuarios.nombre`) y `contarPendientes()`, y pasan **solo números y strings** a los componentes de navegación.
-- [ ] Páginas nuevas:
+- [x] **Admin, menos de 1024px:** `BarraInferior` con Panel (`LayoutGrid`), Validaciones (`ClipboardCheck`, con contador), Horarios (`Calendar`) y Más (`Ellipsis` → `/admin/mas`).
+- [x] Los layouts (Server Components) leen el perfil (`usuarios.nombre`) y `contarPendientes()`, y pasan **solo números y strings** a los componentes de navegación.
+- [x] Páginas nuevas:
   - `/futbolero/perfil`: título, Avatar grande, nombre, correo y botón `outline` "Salir" en un `<form action={logout}>`.
   - `/admin/canchas`: lista de filas crema como las de "Mis canchas" en la Fase 10, con los botones "Info" y "Horarios".
   - `/admin/horarios`: según D6.
   - `/admin/mas`: lista de links de 56px más "Salir".
-- [ ] `ColaValidacion` ya llama a `router.refresh()` después de confirmar o rechazar. Verificar que el contador del layout se actualiza con eso: en App Router, el layout se vuelve a renderizar en `refresh()`.
+- [x] `ColaValidacion` ya llama a `router.refresh()` después de confirmar o rechazar. Verificar que el contador del layout se actualiza con eso: en App Router, el layout se vuelve a renderizar en `refresh()`.
 
 **Aceptación:**
 - A 390px, la barra inferior se ve en Buscar, Mis reservas y Perfil, y no se ve en Detalle.
@@ -377,13 +377,13 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 **Archivos:** `app/page.tsx`, `app/login/LoginForm.tsx`, `app/login/page.tsx`, `components/CanchaIlustracion.tsx`
 **Commit:** `feat(ui): entrada y login con la piel Organic`
 
-- [ ] `CanchaIlustracion`: fondo `fill-sage`, líneas `stroke-background` con `strokeOpacity 0.5`, pelotas `fill-brand` y `fill-background`. Sin `rx`, porque el contenedor recorta. Mantiene `role="img"` y `aria-label`.
-- [ ] **Entrada** (`app/page.tsx`): columna `min-h-dvh` con padding 52/26/34.
+- [x] `CanchaIlustracion`: fondo `fill-sage`, líneas `stroke-background` con `strokeOpacity 0.5`, pelotas `fill-brand` y `fill-background`. Sin `rx`, porque el contenedor recorta. Mantiene `role="img"` y `aria-label`.
+- [x] **Entrada** (`app/page.tsx`): columna `min-h-dvh` con padding 52/26/34.
   - Arriba, `Marca`.
   - Al centro, la ilustración en un contenedor `rounded-[32px] shadow-md overflow-hidden`, el título "Reservá tu cancha de fut5" en 700/34px (dos líneas, `text-balance`) y el párrafo del README en 17px `text-neutral-800`.
   - Abajo, el botón `lg` "Entrar" (`/login`) y el botón `lg outline` "Crear cuenta" (`/login?modo=crear`).
   - La redirección por rol **no cambia**.
-- [ ] **Entrar** (`LoginForm.tsx`), según D1:
+- [x] **Entrar** (`LoginForm.tsx`), según D1:
   - `BotonVolver` a `/`.
   - Título en 700/30px: "Entrá a tu cuenta", o "Creá tu cuenta" si `modo=crear`.
   - Subtítulo en 16px: "Con tu correo. Si todavía no tenés cuenta, la creamos al entrar."
@@ -404,21 +404,21 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 **Archivos:** `app/futbolero/canchas/page.tsx`, `ListaCanchas.tsx`, `components/shared/CanchaCard.tsx`, `components/shared/RatingResumen.tsx`, `app/futbolero/canchas/loading.tsx`
 **Commit:** `feat(ui): búsqueda en rejilla con filtros por amenidad`
 
-- [ ] `page.tsx` (lecturas nuevas):
+- [x] `page.tsx` (lecturas nuevas):
   - agregar `amenidades` al select de `canchas`;
   - leer el nombre del usuario para el avatar;
   - D4: `slots.select("cancha_id, precio").eq("estado","disponible").gte("fecha", hoy).lte("fecha", en14)` y calcular el mínimo por cancha en JS.
   - Pasar a `ListaCanchas` solo datos serializables: `amenidades` ya parseadas con `parsearAmenidades` y `precioDesde`.
-- [ ] Cabecera `bg-card rounded-b-header px-5 pt-[52px] pb-4 gap-3.5`, con dos filas:
+- [x] Cabecera `bg-card rounded-b-header px-5 pt-[52px] pb-4 gap-3.5`, con dos filas:
   - Fila 1: "Dale Cancha" en 700/19px y `Avatar`.
   - Fila 2: buscador de 50px en píldora `bg-background`, con ícono `Search`, `<label className="sr-only">Buscar</label>` y placeholder "Buscá por cancha" (D3: la zona no existe). Filtra por nombre y descripción, sin distinguir tildes (`normalize("NFD")`).
-- [ ] Chips (`ChipFiltro`) en scroll horizontal (`overflow-x-auto`, `snap-x`): Techada, Parqueo, Duchas, Iluminación, con las claves de `lib/amenidades.ts`.
+- [x] Chips (`ChipFiltro`) en scroll horizontal (`overflow-x-auto`, `snap-x`): Techada, Parqueo, Duchas, Iluminación, con las claves de `lib/amenidades.ts`.
   - Se combinan con Y.
   - **Se eliminan** los chips de rating actuales ("3+ ⭐", "4+ ⭐"), porque el orden los reemplaza.
   - No hay chip "Cerca de mí" (D3).
-- [ ] Fila de resultados: "N canchas" (15px `text-neutral-800`) a la izquierda. A la derecha, el orden con `Select` de `components/ui/select.tsx`, con apariencia de link `text-terracota-700 font-bold` y `ChevronDown`. Opciones: "Mejor calificadas" (por defecto) y "Menor precio" (solo si hay precios). Recordar el gotcha de `SelectValue`.
-- [ ] Rejilla: `grid grid-cols-2 gap-3.5 px-5` en mobile, `md:grid-cols-3` y `lg:grid-cols-4`.
-- [ ] `CanchaCard` (toda la card es un `Link`, con foco visible):
+- [x] Fila de resultados: "N canchas" (15px `text-neutral-800`) a la izquierda. A la derecha, el orden con `Select` de `components/ui/select.tsx`, con apariencia de link `text-terracota-700 font-bold` y `ChevronDown`. Opciones: "Mejor calificadas" (por defecto) y "Menor precio" (solo si hay precios). Recordar el gotcha de `SelectValue`.
+- [x] Rejilla: `grid grid-cols-2 gap-3.5 px-5` en mobile, `md:grid-cols-3` y `lg:grid-cols-4`.
+- [x] `CanchaCard` (toda la card es un `Link`, con foco visible):
   - `rounded-card bg-card shadow-sm overflow-hidden`.
   - `FotoCancha` de 96px de alto.
   - Cuerpo `pt-3 px-3.5 pb-3.5 gap-0.5`.
@@ -428,25 +428,25 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
     - si el rating es 0, "Nueva" en vez del número (la regla de `RatingResumen`);
     - después, `· descripción` con `line-clamp-1`.
   - Precio en 700/15px ("desde ₡12.000"), solo si existe.
-- [ ] Estados vacíos: `EmptyState` restilizado (Fase 13). Textos: "Todavía no hay canchas publicadas" / "Volvé más tarde." se mantienen. **Cambio obligado:** "Probá con un filtro de rating más bajo." pasa a "Probá quitando algún filtro.", porque ese filtro ya no existe.
-- [ ] `loading.tsx`: skeleton con la misma forma (cabecera arena más una rejilla de 2 columnas con cards de radio 26).
+- [x] Estados vacíos: `EmptyState` restilizado (Fase 13). Textos: "Todavía no hay canchas publicadas" / "Volvé más tarde." se mantienen. **Cambio obligado:** "Probá con un filtro de rating más bajo." pasa a "Probá quitando algún filtro.", porque ese filtro ya no existe.
+- [x] `loading.tsx`: skeleton con la misma forma (cabecera arena más una rejilla de 2 columnas con cards de radio 26).
 
 ### Fase 6 — Detalle y horarios
 **Archivos:** `app/futbolero/canchas/[canchaId]/page.tsx`, `components/shared/GaleriaFotos.tsx`, `components/shared/AmenidadesGrid.tsx`, `components/shared/SlotPicker.tsx`
 **Commit:** `feat(ui): detalle con lámina y horarios agrupados por franja`
 **Depende de:** D11 (si se aprobó, ya está hecho).
 
-- [ ] Portada: `GaleriaFotos` a 196px de borde a borde, con scroll-snap y fotos `washed`.
+- [x] Portada: `GaleriaFotos` a 196px de borde a borde, con scroll-snap y fotos `washed`.
   - Pasa a ser un client component mínimo para el contador "1 / N" (píldora `bg-background shadow-sm` de 36px, arriba a la derecha). El índice sale de `scrollLeft` o de un `IntersectionObserver`.
   - `BotonVolver` arriba a la izquierda, con `href="/futbolero/canchas"`.
   - Sin fotos: `CanchaIlustracion` a 196px.
-- [ ] Lámina: `-mt-[26px] relative rounded-t-header bg-background px-5 pt-5 gap-3.5`.
+- [x] Lámina: `-mt-[26px] relative rounded-t-header bg-background px-5 pt-5 gap-3.5`.
   - Título en 700/25px.
   - Línea de 15px: `Star` relleno y rating en 700 más `· descripción` (D3; no hay dirección).
   - `politica_cancelacion` se mantiene como `<details>` con el estilo de `Aviso tono="info"`.
-- [ ] Amenidades como tags `Badge variant="sage"` (13px, ícono de 15px). Se muestran las 3 primeras y un botón-tag `neutral` "+N" que despliega el resto, con `aria-expanded`. `AmenidadesGrid` se convierte en ese componente o se reemplaza.
-- [ ] El `error=slot_no_disponible` se muestra con `Aviso tono="atencion"` y el mismo texto.
-- [ ] `SlotPicker`:
+- [x] Amenidades como tags `Badge variant="sage"` (13px, ícono de 15px). Se muestran las 3 primeras y un botón-tag `neutral` "+N" que despliega el resto, con `aria-expanded`. `AmenidadesGrid` se convierte en ese componente o se reemplaza.
+- [x] El `error=slot_no_disponible` se muestra con `Aviso tono="atencion"` y el mismo texto.
+- [x] `SlotPicker`:
   - **Días:** se mantienen los `Tabs` de Base UI (navegación con flechas). Los triggers pasan a pastillas de `w-14 py-2 rounded-dia`, con el día abreviado en 12px ("Hoy", "Mañana", "mié") sobre el número en 700/19px. Activo con `bg-primary text-primary-foreground`, inactivo con `bg-card`. Scroll horizontal.
   - **Franjas:** agrupar los slots del día en Mañana (antes de las 12:00), Tarde (12:00–17:59) y Noche (desde las 18:00). Cada franja lleva un kicker. La franja más pedida (D13) lleva el kicker `text-terracota-700` y el texto "Noche · la más pedida". Las franjas vacías no se muestran.
   - **Pastilla** `min-w-[100px] min-h-12 rounded-slot`, con la hora en **700/16px** (el diseño dice 15px; se sube a 16 por la regla de texto interactivo) y el precio en 12px.
@@ -459,16 +459,16 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
     - Derecha: `Button size="lg"` "Continuar", `flex-1`, que es un `Link` a `reservar/[slotId]` como hoy.
     - Seleccionar nunca navega. Cambiar de selección no navega.
   - Se quita el `pb-20` fijo y se reserva el espacio real de la barra.
-- [ ] Día sin horarios: "No hay horarios este día." en 15px `text-neutral-800`.
+- [x] Día sin horarios: "No hay horarios este día." en 15px `text-neutral-800`.
 
 ### Fase 7 — Hoja de pago SINPE y comprobante
 **Archivos:** `app/futbolero/canchas/[canchaId]/reservar/[slotId]/page.tsx`, `BotonCopiar.tsx`, `comprobante/page.tsx`, `comprobante/SubirComprobante.tsx`, `components/shared/ComprobanteUploader.tsx`, `components/shared/FondoDetalleCancha.tsx` (nuevo)
 **No se tocan:** `actions.ts`, `app/api/reservas/[id]/comprobante/route.ts`
 **Commit:** `feat(ui): pago SINPE como hoja inferior en dos pasos`
 
-- [ ] **Sin rutas interceptadas.** Next 16 cambió las convenciones y el beneficio no compensa el riesgo. Cada una de las dos páginas renderiza `FondoDetalleCancha` y encima `HojaInferior` siempre abierta, con `hrefCerrar` = detalle de la cancha.
+- [x] **Sin rutas interceptadas.** Next 16 cambió las convenciones y el beneficio no compensa el riesgo. Cada una de las dos páginas renderiza `FondoDetalleCancha` y encima `HojaInferior` siempre abierta, con `hrefCerrar` = detalle de la cancha.
   - `FondoDetalleCancha` es solo presentación: nombre y foto de la cancha, `blur-[1px] opacity-50` y `aria-hidden`.
-- [ ] **Paso 1** (`reservar/[slotId]/page.tsx`, D2). Se mantienen `slotTomado`, `reservaPropia` y `confirmarPago.bind` tal como están.
+- [x] **Paso 1** (`reservar/[slotId]/page.tsx`, D2). Se mantienen `slotTomado`, `reservaPropia` y `confirmarPago.bind` tal como están.
   - Encabezado: "Pagá por SINPE Móvil" en 700/21px y "Hoy 18:00–19:00 · {cancha}" en 14px. **Sin contador.**
   - Bloque del número: `bg-terracota-100 rounded-card px-[18px] py-4`, kicker "Número SINPE" en `text-terracota-800`, número en 700/26px `text-terracota-900` y `BotonCopiar`.
   - `BotonCopiar`: 44px, `bg-background border-terracota-300`, ícono `Copy`, "Copiar". Al copiar muestra "Copiado" con `aria-live`. La lógica del portapapeles no cambia.
@@ -476,12 +476,12 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
   - `Aviso tono="info"`: "Hacé la transferencia y después adjuntá el comprobante. Tu horario queda apartado cuando tocás el botón."
   - `<form action={confirmarPagoConParams}>` con `Button size="lg"` a todo el ancho: **"Ya pagué, adjuntar comprobante"** (cambio de copy: el texto viejo decía "subir").
   - Si `slotTomado`: la hoja muestra `Aviso tono="atencion"` "Este horario ya no está disponible", el texto actual y el botón "Ver otros horarios".
-- [ ] **Paso 2** (`comprobante/page.tsx`): la misma hoja con el diseño completo del README (número, monto, adjunto, aviso y enviar).
+- [x] **Paso 2** (`comprobante/page.tsx`): la misma hoja con el diseño completo del README (número, monto, adjunto, aviso y enviar).
   - Hace falta leer `canchas.numero_sinpe` y los datos del slot, que es una lectura nueva: hoy la página solo lee la reserva.
   - El aviso de estado usa el texto del diseño: "Todavía no está confirmada: la cancha revisa el comprobante y te avisamos acá mismo."
   - El caso "sin reserva" se restiliza y actualiza el copy al nuevo texto del botón.
   - El caso `estado !== "creada"` sigue con su `redirect`.
-- [ ] `ComprobanteUploader`: se restiliza por estado. **No cambian** `subirConReintentos`, `REINTENTOS_MAXIMOS`, los tiempos de espera ni `comprimirImagen`.
+- [x] `ComprobanteUploader`: se restiliza por estado. **No cambian** `subirConReintentos`, `REINTENTOS_MAXIMOS`, los tiempos de espera ni `comprimirImagen`.
   - `idle`: fila-botón `w-full bg-card rounded-card px-4 py-3.5`, con un cuadro de 52px `rounded-thumb bg-neutral-300` e ícono `Camera`, más "Adjuntar comprobante" (16/700) y "Foto o captura del SINPE" (14px). Mantiene `capture="environment"`.
   - `comprimiendo`: la misma fila con "Preparando imagen…" y `aria-busy`.
   - `listo`, `subiendo` y `error`: vista de revisión (pantalla 7 del README) dentro de la hoja.
@@ -491,7 +491,7 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
     - `Aviso tono="exito"`: "Si se corta la señal lo reintentamos solo. No pierdas la imagen: queda guardada acá."
     - En `error`, `Aviso tono="error"` con el mensaje.
   - Como también se usa en `ReservaEstado` (estado `creada`), verificar que se ve bien fuera de la hoja.
-- [ ] Accesibilidad de la hoja:
+- [x] Accesibilidad de la hoja:
   - `role="dialog"`, `aria-modal` y `aria-labelledby` al título.
   - El foco inicial va al título.
   - Esc y el overlay cierran hacia el detalle.
@@ -503,12 +503,12 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 **Archivos:** `components/shared/EstadoReservaBadge.tsx`, `components/ReservaEstado.tsx`, `app/futbolero/reservas/[reservaId]/page.tsx`
 **Commit:** `feat(ui): pantalla de estado con cabecera tintada y línea de tiempo`
 
-- [ ] `EstadoReservaBadge`: `CONFIG` según la sección 4.2 (badge en píldora, ícono de 15px, texto de 14px/600). Exportar `TONO_ESTADO_RESERVA`. `ETIQUETA_ESTADO_RESERVA` se mantiene igual.
-- [ ] `page.tsx` (lecturas nuevas):
+- [x] `EstadoReservaBadge`: `CONFIG` según la sección 4.2 (badge en píldora, ícono de 15px, texto de 14px/600). Exportar `TONO_ESTADO_RESERVA`. `ETIQUETA_ESTADO_RESERVA` se mantiene igual.
+- [x] `page.tsx` (lecturas nuevas):
   - agregar `comprobante_url` y `comprobante_subido_at` al select de `reservas`, y `fotos` al de `canchas`;
   - si hay comprobante, firmar la URL con `obtenerUrlComprobanteFirmada`, que el futbolero puede leer por la policy `comprobantes_select_dueno`;
   - pasar solo datos serializables.
-- [ ] `ReservaEstado`, **cabecera** (`TONO_ESTADO_RESERVA[estado]`, `rounded-b-header px-[22px] pt-[52px] pb-5 gap-4`):
+- [x] `ReservaEstado`, **cabecera** (`TONO_ESTADO_RESERVA[estado]`, `rounded-b-header px-[22px] pt-[52px] pb-5 gap-4`):
   - Link "Mis reservas" de 44px con `ChevronLeft`.
   - Círculo de 52px con el ícono del estado (26px, crema).
   - Nombre del estado en 700/22px.
@@ -518,19 +518,19 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
     - `confirmada`: "Te esperamos en la cancha."
     - `rechazada`: "Motivo: {motivo_rechazo}".
     - `expirada` y `cancelada`: los textos actuales.
-- [ ] **Línea de tiempo** (solo `creada`, `pendiente_validacion` y `confirmada`), en un `<ol>`:
+- [x] **Línea de tiempo** (solo `creada`, `pendiente_validacion` y `confirmada`), en un `<ol>`:
   - Pasos completados: 1 en `creada`, 2 en `pendiente_validacion`, 3 en `confirmada`.
   - Círculos de 24px. Completados: `bg-brand` con `Check` crema y un `sr-only` "completado". Pendientes: `bg-terracota-300 text-terracota-900` con su número.
   - Barras de 3px: `bg-brand` entre pasos completados, `bg-terracota-300` en el resto.
   - Labels en 13px: "Reservado", "Comprobante", "Confirmado". El paso actual va en 700 con `aria-current="step"`.
   - En `creada` la cabecera es neutral: verificar el contraste de `bg-terracota-300` sobre `bg-neutral-200`. Si no se distingue, usar `bg-neutral-400` para los pendientes.
-- [ ] **Contenido** (`px-[22px] pt-[18px] gap-3.5`):
+- [x] **Contenido** (`px-[22px] pt-[18px] gap-3.5`):
   - **Card de la reserva:** `FotoCancha` de 64px `rounded-slot`, nombre en 700/17px, `formatearFechaLarga` y "18:00–19:00 · ₡14.000".
   - **Card del comprobante** (si existe): kicker "Tu comprobante", miniatura de 56×70 `rounded-[16px]` **sin washed**, y "Enviado a las HH:MM. Vence a las HH:MM si nadie responde."
   - Estado `creada`: se mantiene `ComprobanteUploader` inline, que es el camino para retomar la reserva.
   - Botón `outline` "Cancelar reserva" a todo el ancho, al pie (52px), **solo en `creada`** y siempre detrás de `ConfirmDialog`, como hoy.
   - **No** se implementa el bloque demo "Cómo se ven los otros estados".
-- [ ] Realtime: el canal y el toast no cambian. Se agrega `router.refresh()` cuando cambia el estado, para refrescar la URL firmada del comprobante.
+- [x] Realtime: el canal y el toast no cambian. Se agrega `router.refresh()` cuando cambia el estado, para refrescar la URL firmada del comprobante.
 
 ### Fase 9 — Mis reservas
 **Archivos:** `app/futbolero/reservas/page.tsx`, `ListaReservas.tsx`, `loading.tsx`
