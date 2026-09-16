@@ -20,9 +20,15 @@ export function BotonCopiar({ texto }: { texto: string }) {
   }
 
   return (
-    <Button type="button" variant="outline" size="sm" onClick={copiar}>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={copiar}
+      className="h-11 border-terracota-300 bg-background"
+    >
       {copiado ? <Check /> : <Copy />}
-      {copiado ? "Copiado" : "Copiar número"}
+      <span aria-live="polite">{copiado ? "Copiado" : "Copiar"}</span>
     </Button>
   );
 }
