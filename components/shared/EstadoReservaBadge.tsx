@@ -1,46 +1,71 @@
-import { Clock, Hourglass, CheckCircle2, XCircle, TimerOff, CircleSlash2 } from "lucide-react";
+import { Clock, Hourglass, CircleCheck, CircleX, TimerOff, CircleSlash2, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { EstadoReserva } from "@/lib/types/database";
 
 // Único punto de verdad color+ícono+texto por estado de Reserva (ver
-// plan-ui-ux-canchas-fut5-cr.md sección 4 y 1.2 — nunca reinterpretar el
-// color de un estado en otra pantalla, y nunca mostrar un estado solo por
-// color). Cualquier pantalla que muestre el estado de una Reserva usa este
-// componente en vez de un badge ad-hoc.
+// plan-rediseno-dale-cancha.md sección 4.2 — nunca reinterpretar el color
+// de un estado en otra pantalla, y nunca mostrar un estado solo por color).
+// Cualquier pantalla que muestre el estado de una Reserva usa este
+// componente (badge) o TONO_ESTADO_RESERVA (cabecera) en vez de algo ad-hoc.
 const CONFIG: Record<
   EstadoReserva,
-  { texto: string; icono: typeof Clock; clases: string }
+  {
+    texto: string;
+    icono: LucideIcon;
+    badge: string;
+    cabeceraFondo: string;
+    cabeceraCirculo: string;
+    cabeceraTexto: string;
+  }
 > = {
   creada: {
     texto: "Esperando pago",
     icono: Clock,
-    clases: "bg-neutral/10 text-neutral",
+    badge: "bg-neutral-200 text-neutral-800",
+    cabeceraFondo: "bg-neutral-200",
+    cabeceraCirculo: "bg-neutral-800",
+    cabeceraTexto: "text-neutral-900",
   },
   pendiente_validacion: {
     texto: "En revisión",
     icono: Hourglass,
-    clases: "bg-warning/10 text-warning",
+    badge: "bg-terracota-200 text-terracota-900",
+    cabeceraFondo: "bg-terracota-100",
+    cabeceraCirculo: "bg-brand",
+    cabeceraTexto: "text-terracota-900",
   },
   confirmada: {
     texto: "Confirmada",
-    icono: CheckCircle2,
-    clases: "bg-success/10 text-success",
+    icono: CircleCheck,
+    badge: "bg-sage-200 text-sage-900",
+    cabeceraFondo: "bg-sage-100",
+    cabeceraCirculo: "bg-sage-700",
+    cabeceraTexto: "text-sage-900",
   },
   rechazada: {
     texto: "Rechazada",
-    icono: XCircle,
-    clases: "bg-danger/10 text-danger",
+    icono: CircleX,
+    badge: "bg-terracota-200 text-terracota-900",
+    cabeceraFondo: "bg-terracota-100",
+    cabeceraCirculo: "bg-terracota-800",
+    cabeceraTexto: "text-terracota-900",
   },
   expirada: {
     texto: "Expirada",
     icono: TimerOff,
-    clases: "bg-neutral/10 text-neutral",
+    badge: "bg-neutral-200 text-neutral-800",
+    cabeceraFondo: "bg-neutral-200",
+    cabeceraCirculo: "bg-neutral-700",
+    cabeceraTexto: "text-neutral-900",
   },
   cancelada: {
     texto: "Cancelada",
     icono: CircleSlash2,
-    clases: "bg-neutral/10 text-neutral",
+    badge: "bg-neutral-200 text-neutral-800",
+    cabeceraFondo: "bg-neutral-200",
+    cabeceraCirculo: "bg-neutral-700",
+    cabeceraTexto: "text-neutral-900",
   },
 };
 
@@ -51,6 +76,11 @@ export const ETIQUETA_ESTADO_RESERVA: Record<EstadoReserva, string> = Object.fro
   Object.entries(CONFIG).map(([estado, { texto }]) => [estado, texto])
 ) as Record<EstadoReserva, string>;
 
+export const TONO_ESTADO_RESERVA: Record<
+  EstadoReserva,
+  Pick<(typeof CONFIG)[EstadoReserva], "icono" | "cabeceraFondo" | "cabeceraCirculo" | "cabeceraTexto">
+> = CONFIG;
+
 export function EstadoReservaBadge({
   estado,
   className,
@@ -58,10 +88,10 @@ export function EstadoReservaBadge({
   estado: EstadoReserva;
   className?: string;
 }) {
-  const { texto, icono: Icono, clases } = CONFIG[estado];
+  const { texto, icono: Icono, badge } = CONFIG[estado];
   return (
-    <Badge className={cn("h-auto gap-1.5 px-2.5 py-1 text-sm font-medium", clases, className)}>
-      <Icono className="size-3.5" />
+    <Badge className={cn("gap-1.5 [&>svg]:size-[15px] text-[14px] font-semibold", badge, className)}>
+      <Icono />
       {texto}
     </Badge>
   );

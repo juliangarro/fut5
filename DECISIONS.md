@@ -3,6 +3,123 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-16 — Cierre del rediseño Organic (Fases 0-13 de plan-rediseno-dale-cancha.md)
+
+Las 13 fases del rediseño se ejecutaron de corrido en la rama
+`rediseno-organic` (D12), un commit por fase, sin push (el usuario decide
+el merge a `main` aparte — ver HANDOFF.md). Resumen de cierre:
+
+- **D1-D13** (definidas en la entrada del 2026-09-15 arriba): todas
+  resueltas a su default recomendado, sin cambios durante la ejecución.
+- **Métricas del panel del admin** (Fase 10): ver la entrada del
+  2026-09-16 "Panel del admin" arriba — reservasHoy, ingresosHoy, delta
+  vs. ayer, ocupación/rating (reusan `calcularInsights`), horarios de la
+  semana por cancha, próximos partidos.
+- **Qué quedó fuera de este plan** (documentado como riesgos en la
+  sección 6 del plan, ninguno se resuelve acá):
+  - R1/R2 (severidad alta): una reserva `creada` no tiene plazo real, y
+    el cron de expiración corre 1 vez al día (límite de Vercel Hobby) —
+    el copy nuevo de "vence a las HH:MM" en `ReservaEstado`/la cola de
+    validaciones es honesto sobre el dato que existe, pero no arregla el
+    problema de fondo.
+  - R3 (media): la URL firmada del comprobante expira a los 5 minutos;
+    si el admin deja la cola de validaciones abierta más tiempo, la
+    imagen se rompe sin refresco automático.
+  - R4 (alta, conocida): el login sigue sin verificar identidad — la
+    piel nueva no cambia ni oculta esto, sigue siendo una vulnerabilidad
+    temporal aceptada.
+  - R5/R6: sin tests/CI automatizados y sin ambiente de staging — toda
+    la verificación de este rediseño fue manual (lint + tsc + revisión
+    de código en este sandbox, chequeo visual pendiente en la Mac del
+    usuario).
+- **Limitación de verificación de esta sesión**: `npm run build` no pudo
+  correr en el sandbox donde se ejecutó el plan (proxy de red bloquea
+  `fonts.googleapis.com`, ver HANDOFF.md) — cada fase se verificó con
+  `npm run lint` + `npx tsc --noEmit` + revisión de código, decisión
+  explícita del usuario. La matriz de verificación visual de la sección 8
+  del plan (rutas a 390×844 y 1280×832, accesibilidad transversal)
+  **queda pendiente**, para correr en un entorno donde `npm run build`/
+  `npm run dev` funcionen.
+- **Auditoría de grep de la Fase 13**: sin resultados en hex sueltos,
+  paleta Tailwind default (zinc/gray/etc.), `bg/text-black`/`white`, y
+  clases semánticas sin número (`text-danger`, `fill-warning`). Dos
+  hallazgos quedaron, ambos justificados: `components/shared/SlotPicker.tsx`
+  usa `toLocaleDateString` sobre un `Date` construido y usado enteramente
+  en el cliente (sin el bug de UTC de D11, que es un problema de cómputo
+  en el servidor) para un selector de 14 días con forma de datos distinta
+  a la de `lib/formato.ts`; y `washed` solo aparece sobre fotos de
+  cancha, nunca sobre comprobantes de pago.
+
+## 2026-09-16 — Panel del admin (Fase 10 del rediseño Organic) — definiciones de métrica
+
+Nuevo `lib/admin/panel.ts`, solo lectura. El plan pide dejar estas
+definiciones documentadas acá para que no queden implícitas en el código:
+
+- **Reservas hoy:** reservas en estado `confirmada` o `pendiente_validacion`
+  cuyo `slot.fecha` es hoy (hora de Costa Rica, vía `hoyCR()`).
+- **Ingresos hoy:** suma de `monto` de las reservas `confirmada` (no
+  `pendiente_validacion`) cuyo `slot.fecha` es hoy — subtítulo "confirmados"
+  en el StatCard, para no confundir con lo que todavía puede rechazarse.
+- **Delta de "Reservas hoy" vs. ayer:** `reservasHoy - reservasAyer`, solo
+  si existían horarios (`slots`) cargados ayer para alguna cancha del admin
+  — si no había horarios ayer, no hay base real de comparación y el delta
+  queda `null` (el StatCard no muestra la línea). No se aplica el mismo
+  criterio de "reservas" a ayer: se cuentan con el mismo filtro de estado
+  (`confirmada`/`pendiente_validacion`) para que la comparación sea
+  consistente.
+- **Ocupación (7 días) y Rating:** se reusan tal cual de
+  `calcularInsights(supabase, canchaIds, 7)` (`lib/insights.ts`, sin
+  tocar) — `ocupacionPct`, `ratingPromedio`, `totalCalificaciones`. La
+  ocupación no lleva delta: `calcularInsights` no expone el período
+  anterior de ocupación, y agregarlo implicaría tocar `lib/insights.ts`,
+  fuera del alcance de esta fase.
+- **Horarios esta semana (por cancha):** conteo de `slots` con `fecha`
+  entre hoy y hoy+6 (7 días, límite `sumarDiasCR(hoy, 6)`), agrupado por
+  `cancha_id`. Se muestra en la fila de cada cancha en "Mis canchas"
+  ("★ 4.8 · 12 horarios esta semana").
+- **Próximos partidos:** hasta 5 reservas `confirmada` con `slot.fecha >=
+  hoy`, ordenadas por fecha y hora de inicio ascendente. Sin límite
+  superior de fecha (no se acotó a los próximos N días) — en la escala
+  actual del producto no es un problema de performance real.
+
+## 2026-09-15 — Rediseño Organic (Turno 2a) — decisiones D1–D13
+
+Ver `plan-rediseno-dale-cancha.md` para el plan completo (secciones 1–4) y
+`design_handoff_dale_cancha/` para el handoff de diseño original. Ninguna
+decisión se discutió con Julián antes de arrancar la Fase 0, así que se
+aplicó el **default recomendado** de cada una, como el plan permite
+explícitamente. Si alguna no es la deseada, se puede revertir en la fase
+correspondiente sin tocar lógica de negocio.
+
+- **D1 — Pantallas de auth:** piel nueva sobre el flujo actual (correo +
+  tarjetas de rol, sin contraseña). `/register` sigue redirigiendo.
+- **D2 — Hoja de pago:** dos pasos sobre las rutas existentes
+  (`reservar/[slotId]` y `.../comprobante`), sin contador en ningún paso.
+- **D3 — Distancia / "Cerca de mí" / dirección:** se omiten. La línea meta
+  usa rating + descripción.
+- **D4 — Precio en la card:** lectura nueva del mínimo de `slots.precio`
+  disponible en los próximos 14 días.
+- **D5 — Pestaña Perfil:** página nueva `/futbolero/perfil`, solo lectura.
+- **D6 — Navegación del admin:** rutas nuevas `/admin/canchas`,
+  `/admin/horarios`, `/admin/mas`.
+- **D7 — Contraste de rellenos con texto:** paleta accesible — `--primary`
+  = terracota 700 `#8c491a`, "Confirmar reserva" en sage 700 `#56633f`.
+  `--brand` (terracota base `#c67139`) queda para acentos sin texto.
+- **D8 — Tema:** solo modo claro; se elimina el bloque `.dark` y
+  `@custom-variant dark`.
+- **D9 — Formatos:** `lib/formato.ts` con `formatearColones` (punto de
+  miles) y fechas en `America/Costa_Rica` ("setiembre").
+- **D10 — Rampa del heatmap:** ajustada (crema → terracota 300/500/700/900)
+  con leyenda "menos → más".
+- **D11 — Bug de "hoy" en UTC:** se corrige en la Fase 0.5, antes de la
+  Fase 6 (`lib/fecha.ts` → `hoyCR()` / `sumarDiasCR()`).
+- **D12 — Rama de trabajo:** rama local `rediseno-organic` (creada en esta
+  fase), commits por fase, merge a `main` al final. `main` hace deploy
+  automático, así que no hay push intermedio.
+- **D13 — Etiqueta "Noche · la más pedida":** se calcula con los slots
+  visibles (franja con mayor proporción de `retenido`/`reservado` en 14
+  días, con al menos 3 ocupados); sin etiqueta si no hay señal clara.
+
 ## 2026-09-15 — Fase 0 de roadmap-producto.md: fotos, amenidades, multi-cancha
 
 - **Info de cancha** (`/admin/canchas/[canchaId]/info`, doc UI/UX 6.4): fotos

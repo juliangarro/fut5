@@ -1,257 +1,199 @@
-# Handoff — sesión del 2026-09-15
+# Handoff — sesión del 2026-09-16 (rediseño Organic, Fases 0-13 completas)
 
-> Para el siguiente agente (o para retomar en una sesión nueva). Si esto
-> quedó desactualizado porque ya se ejecutó el trabajo pendiente, borrarlo
-> o reemplazarlo — no es un documento permanente como SPEC.md/DECISIONS.md,
-> es una foto del estado a mitad de tarea.
+> Para el siguiente agente (o para retomar en una sesión nueva). Reemplaza
+> el handoff anterior (2026-09-15, rename a "Dale Cancha" — esa tarea ya
+> se ejecutó, verificó y pusheó; ver `git log main` si hace falta ese
+> historial). Las 13 fases de `plan-rediseno-dale-cancha.md` están
+> commiteadas en `rediseno-organic`, pero **sin push a `main` todavía** —
+> falta la decisión del usuario sobre el merge. No es un documento
+> permanente como SPEC.md/DECISIONS.md.
 >
-> **Actualización**: el rename a "Dale Cancha" + la limpieza de copy de la
-> tabla de abajo ya se ejecutaron y verificaron (build limpio, revisado en
-> el navegador, cero errores de consola en tabs nuevas). El resto de este
-> documento (estado del proyecto, bugs encontrados, próximos pasos) sigue
-> vigente — solo el "objetivo inmediato" de esta sección quedó completado.
+> **Actualización 2026-09-15/16, sesión de QA visual en la Mac del usuario**
+> (fuera del sandbox): se corrió `npm run build` y `npm run dev` reales,
+> y se recorrió la matriz de la sección 8 del plan (ver esa sección para
+> el detalle ruta por ruta). Se encontraron y arreglaron 2 bugs reales:
+> (1) `app/futbolero/layout.tsx`/`app/admin/layout.tsx` pasaban íconos de
+> `lucide-react` como prop de Server a Client Component, lo que tiraba
+> 500 en **todas** las rutas de `/futbolero/*` y `/admin/*` — `BarraInferior`
+> ahora resuelve el ícono por string key; (2) a 1280px la cabecera "Dale
+> Cancha" se duplicaba en `/futbolero/canchas` (`ListaCanchas.tsx` sin
+> `md:hidden`). También se arregló, a pedido explícito del usuario, el
+> hallazgo de texto interactivo a 15px en vez de ≥16px (sistémico en
+> `button.tsx`/`tabs.tsx`/`ChipFiltro.tsx`/`NavBar.tsx`/`SidebarAdmin.tsx`
+> y algunos labels puntuales) — ver sección 8 del plan para el detalle
+> completo y el alcance exacto del arreglo.
 
-## Objetivo inmediato (acordado con el usuario, ya ejecutado y verificado)
+## Qué se está haciendo
 
-Dos tareas simples, aprobadas en la conversación pero sin tocar código aún:
+Ejecutando `plan-rediseno-dale-cancha.md` de punta a punta: migración del
+sistema visual de verde/Inter a un sistema "Organic" (crema/arena/
+terracota/sage, fuente Figtree, componentes en píldora). El plan tiene 13
+fases (0 a 13), cada una con su propio commit en la rama `rediseno-organic`
+(creada desde `main` en la Fase 0, D12). **Ninguna fase toca lógica de
+negocio** — solo UI, salvo lecturas nuevas (`select`) explícitamente
+anotadas en cada commit.
 
-1. **Renombrar la app a "Dale Cancha"** (decidido entre 4 opciones que se le
-   presentaron al usuario — ver razonamiento abajo, no volver a discutirlo).
-2. **Limpiar "AI slop" de la copy** — lista concreta ya acordada, sin ajustes
-   pendientes del usuario.
+El usuario aprobó ejecutar todo el plan de corrido ("Sigamos, viento en
+popa"), fase por fase, sin pausas de revisión entre cada una, con esta
+verificación por fase (decisión explícita del usuario, ver abajo):
+`npm run lint` + `npx tsc --noEmit` + revisión de código — **no**
+`npm run build`, ver limitación de sandbox abajo. El chequeo visual real
+(`npm run build`/`npm run dev`, pantallas a 390×844 y 1280×832, nav por
+teclado) queda para el usuario en su Mac, fuera de este sandbox, cuando
+quiera.
 
-### Por qué "Dale Cancha" (no re-litigar esto)
+**Nunca hacer `git push`** sin que el usuario lo pida explícitamente en
+ese momento — ninguna fase de este trabajo se pusheó todavía, todo vive
+en commits locales de `rediseno-organic`.
 
-Investigué el mercado real (WebSearch) antes de proponer nombre: hay ~10
-competidores directos en Costa Rica (Mejengas.com, SuperCancha, Sportico,
-MiCanchaCR, Cancha Ya, CONA, iCancha, LaSinte, ATC, joga). La mayoría son
-variaciones de "Cancha + algo" — ese patrón ya no diferencia. "Mejenga" se
-descartó porque es literalmente el nombre de un competidor real
-(Mejengas.com — reserva, organiza equipo, paga con SINPE, casi idéntico a
-este producto). "Dale Cancha" es una expresión tica real, no un sustantivo
-genérico, y no choca con ningún competidor encontrado en la búsqueda.
+## Estado actual
 
-### Lista de cambios de copy acordados (ejecutar tal cual, ya revisados)
+- [x] **Fase 0** — decisiones D1-D13 resueltas a su default, documentadas
+  en `DECISIONS.md`. Rama `rediseno-organic` creada. Commit `9f31424`.
+- [x] **Fase 0.5** — bug de "hoy" en UTC (D11): `lib/fecha.ts`
+  (`hoyCR()`/`sumarDiasCR()`), aplicado en las 2 pantallas que ya
+  calculaban fechas. Commit `4f45a4a`.
+- [x] **Fase 1** — tokens base: `app/globals.css` reescrito (paleta
+  Organic, radios con nombre, sin `.dark`), `app/layout.tsx` con Figtree,
+  `sonner.tsx` sin `next-themes`. Commit `ca5ebb8`.
+- [x] **Fase 2** — primitivos shadcn/ui reestilizados (button, input,
+  textarea, card, badge, tabs, dialog, select, checkbox, radio-group,
+  skeleton, label) + componentes compartidos nuevos (`Marca`,
+  `BotonVolver`, `Aviso`, `ChipFiltro`, `HojaInferior`,
+  `BarraAccionInferior`, `ContadorExpiracion`, `FotoCancha`, `Avatar`) +
+  `lib/formato.ts` (D9). Commit `71ca7c4`.
+- [x] **Fase 3** — navegación: `BarraInferior` (mobile), `SidebarAdmin`,
+  `NavBar` reescrito, perfil futbolero (D5), rutas admin nuevas (D6:
+  `/admin/canchas`, `/admin/horarios`, `/admin/mas`),
+  `lib/admin/contarPendientes.ts`. Commit `32a621a`.
+- [x] **Fase 4** — pantalla de entrada + login (D1: piel nueva sobre el
+  flujo sin contraseña, tarjetas de rol). Commit `07e25e9`.
+- [x] **Fase 5** — buscador de canchas: filtros por amenidad, orden,
+  precio-desde (D4), `CanchaCard`. Commit `15de52e`.
+- [x] **Fase 6** — detalle de cancha: galería full-bleed, horarios
+  agrupados por franja con "la más pedida" (D13, `lib/franjas.ts`).
+  Commit `77551c6`.
+- [x] **Fase 7** — pago SINPE en hoja inferior de 2 pasos (D2, sin
+  contador), `ComprobanteUploader` reestilizado sin tocar la lógica de
+  subida/reintentos. Commit `85295ed`.
+- [x] **Fase 8** — estado de la reserva: `EstadoReservaBadge` +
+  `TONO_ESTADO_RESERVA`, cabecera tintada con línea de tiempo de 3 pasos,
+  copy "qué sigue" honesto (usa `expira_at`, nunca promete un tiempo de
+  respuesta). Bug propio detectado y corregido en el camino: agregar
+  `formatearHoraDeTimestamp` a `lib/formato.ts` (con `timeZone:
+  "America/Costa_Rica"`) porque mostrar `expira_at`/`comprobante_subido_at`
+  con `new Date(...).toISOString()` da la hora en UTC, no en CR — mismo
+  bug que D11. Commit `82e6ee6`.
+- [x] **Fase 9** — Mis reservas (tabs Activas/Pasadas, línea "qué sigue"
+  en la fila, `hora_fin` como lectura nueva). Commit `763232f`.
+- [x] **Fase 10** — Panel del admin (`lib/admin/panel.ts` nuevo, banner,
+  4 StatCards, próximos partidos). Commit `1e55123`.
+- [x] **Fase 11** — Cola de validaciones (filtro por cancha, expandir
+  primer ítem). Commit `510ca70`.
+- [x] **Fase 12** — Estadísticas (heatmap D10, gráfico de ingresos).
+  Commit `49ee223`.
+- [x] **Fase 13** — Barrido final: pantallas sin diseñar heredan tokens,
+  greps de auditoría (hex sueltos, paleta Tailwind default, texto <16px,
+  `toLocaleDateString` residual, `render={<Link` sin `nativeButton`,
+  `washed` en comprobantes — todas en 0 resultados o justificadas),
+  cierre de `DECISIONS.md`/este handoff. **Lo único que falta de la
+  Fase 13**: recorrer la matriz de verificación visual de la sección 8
+  del plan (bloqueada en este sandbox) y preguntarle al usuario sobre
+  el merge a `main` y el push — ver "Próximos pasos" abajo.
 
-| Dónde | Texto actual | Cambiar a |
-|---|---|---|
-| `app/layout.tsx` (metadata title) | "Canchas Fútbol 5 CR" | "Dale Cancha" |
-| `app/page.tsx` (h1 landing) | "Canchas Fútbol 5 — Costa Rica" | "Dale Cancha" (revisar si el subtítulo "Reservá tu cancha y pagá por SINPE Móvil, sin vueltas." sigue funcionando debajo del nuevo nombre, probablemente sí) |
-| `app/admin/layout.tsx` (nav link) + `app/admin/page.tsx` (h1) | "Dashboard" | "Panel" |
-| `app/admin/layout.tsx` (nav link) + `app/admin/insights/page.tsx` (h1) | "Insights" | "Estadísticas" |
-| `app/login/LoginForm.tsx` línea ~54 | "AdminCancha" (label del radio) | "Dueño de cancha" — **no tocar** el `value="admin_cancha"` del input ni nada en la base de datos, es solo el texto visible |
-| `app/login/LoginForm.tsx` línea ~63-66 | "Si tu email ya tiene una cuenta, entrás con el tipo que ya tenías asignado, aunque elijas otro acá." | Cortar o reducir a una frase muy corta — sobre-explica un caso borde |
-| `components/ReservaEstado.tsx` línea ~57 | `` toast.info(`Tu reserva pasó a: ${nueva.estado.replace("_", " ")}`) `` — esto es un **bug real**, no solo de tono: filtra el enum crudo de la base (ej. "pendiente validacion" sin humanizar) | Reusar las etiquetas humanas que ya existen en `EstadoReservaBadge.tsx` (el objeto `CONFIG` ahí tiene `texto` por estado) — hay que exportar ese mapeo o duplicar las 6 líneas, decisión de implementación libre |
-| `components/shared/StatCard.tsx` línea ~37 | "% vs período anterior" | "% vs. período anterior" (agregar el punto) o reformular — menor |
+El detalle de qué cambió en cada fase (archivos, decisiones de
+implementación no explícitas en el plan) vive en los mensajes de commit
+de `rediseno-organic` — `git log rediseno-organic` es la fuente de verdad
+fase a fase, más confiable que resumir todo acá.
 
-Grep para confirmar que no queden más ocurrencias del nombre viejo después:
-```bash
-grep -rn "Canchas Fútbol 5\|Canchas Fut5" app/ --include="*.tsx" --include="*.ts"
-```
-(al momento de este handoff solo aparece en los 2 archivos de la tabla — si
-el grep post-cambio da resultados, falta algo).
+**Checkboxes del plan** (`plan-rediseno-dale-cancha.md`): todavía no se
+fueron marcando `[x]` a medida que se completa cada fase (quedó como
+deuda de la sesión anterior a este handoff) — pendiente hacerlo, al menos
+retroactivamente para las Fases 0-8, antes de cerrar el trabajo.
 
-**Después de aplicar los cambios**: `npm run lint`, `npm run build`, probar
-en el navegador (Buscar/mobile con la campana de verificación que ya se
-usó toda la sesión — ver sección "Cómo verificar" abajo), commitear, y
-**preguntar antes de pushear** salvo que el usuario ya haya dicho
-explícitamente que empuje — el patrón de esta sesión fue: nunca pushear sin
-que lo pida cada vez, aunque haya dado luz verde para ejecutar el cambio.
+## Limitación real de este sandbox (no es un bug del código)
 
----
+`npm run build` no completa en el sandbox de Linux donde corre este
+agente: `next/font/google` (Figtree) intenta bajar de
+`fonts.googleapis.com` y el proxy de red del sandbox lo bloquea (`curl -v`
+→ `403` con header `X-Proxy-Error: blocked-by-allowlist`; `registry.
+npmjs.org` sí funciona). Afecta a `main` también, no es algo que esta
+rama haya roto. El usuario decidió explícitamente (no volver a
+preguntarlo) seguir con lint+tsc+revisión de código como verificación acá,
+y correr `npm run build`/`npm run dev` él mismo en su Mac cuando quiera
+ver el resultado real.
 
-## Estado actual del proyecto
+Nota aparte, ya resuelta y no relevante para el siguiente agente salvo que
+alguien reinstale dependencias desde cero en este mismo sandbox: hubo que
+`npm install --no-save @next/swc-linux-arm64-gnu@16.3.5` para que el build
+llegara siquiera hasta el bloqueo de fonts (el binario nativo instalado
+por default es para macOS ARM64). No se persistió en `package.json`/
+`package-lock.json`.
 
-- **Repo**: https://github.com/juliangarro/fut5 (rama `main`, sin PRs — todo
-  push directo, decisión ya tomada con el usuario).
-- **Deploy**: Vercel, conectado a ese repo, deploy automático en cada push
-  a `main`. Plan Hobby (no Pro) — importa para cualquier cosa que necesite
-  Vercel Cron (ver DECISIONS.md, el cron de expiración corre 1 vez/día por
-  esta limitación, no cada 5 min como se diseñó originalmente).
-- **Local**: `/Users/juliangarro/Downloads/canchas-fut5-cr` (el working
-  directory real del proyecto — el proyecto original arrancó por error en
-  `/Users/juliangarro/Downloads/files`, no confundir).
-- **Supabase**: proyecto `pjpfkqfkbqbpjxuulnea`, credenciales reales en
-  `.env.local` (gitignored, no se pierden porque están en el filesystem
-  local, no en git). **Es el proyecto de producción real**, no hay ambiente
-  de staging separado — cualquier prueba manual escribe a la misma base que
-  ve el usuario real.
-- **Último commit**: `2ae84a3` — ya pusheado y en sync con `origin/main`.
-  Working tree limpio al momento de este handoff.
-- **Dev server**: se corrió toda la sesión vía `mcp__Claude_Browser`
-  `preview_start` con `.claude/launch.json` en
-  `/Users/juliangarro/Downloads/files/.claude/launch.json` (nota: quedó en
-  el directorio viejo por cómo lo pidió la herramienta, apunta a
-  `--prefix /Users/juliangarro/Downloads/canchas-fut5-cr`). Puede que no
-  esté corriendo si empieza una sesión nueva — volver a `preview_start`
-  con name "dev" si hace falta.
+## Reglas duras del plan (no romper sin que el usuario lo pida)
 
-## Qué existe hoy (resumen — el detalle real vive en git log y DECISIONS.md)
+- No tocar `app/**/actions.ts`, `app/api/**`, `supabase/migrations/**`,
+  `proxy.ts`, `lib/supabase/**`, ni la máquina de estados de `Reserva`.
+  Lecturas nuevas (`select`) sí están permitidas, anotadas en el commit.
+- Cero hex sueltos fuera de `app/globals.css` (excepción: el literal de
+  `themeColor` en el `viewport` de `app/layout.tsx`).
+- Base UI, no Radix: botón-como-link necesita `render={<Link .../>}` **y**
+  `nativeButton={false}`; `SelectValue` necesita `children` como función.
+- Solo props serializables de Server a Client Components.
+- Mínimos de accesibilidad: texto interactivo ≥16px (11-13px solo en
+  kickers/metadata), objetivos táctiles ≥44×44px, cada estado de reserva
+  con color+ícono+texto juntos, foco visible (`outline: 2px`,
+  `outline-offset: 2px`).
+- `washed` en fotos de cancha, **nunca** en comprobantes de pago.
+- Nunca mostrar el valor crudo del enum de estado — siempre
+  `ETIQUETA_ESTADO_RESERVA`.
 
-Implementado y verificado en producción:
-- Modelo de datos completo + RLS + triggers de máquina de estados (Fase
-  inicial, antes del UI/UX).
-- Login simplificado: email + tipo de cuenta, **sin contraseña, sin
-  verificar que el email sea de quien lo escribe** — decisión explícita del
-  usuario, documentada como vulnerabilidad temporal aceptada
-  (DECISIONS.md). No "arreglar" esto sin que el usuario lo pida.
-- Sistema de diseño (shadcn/ui, preset `base-nova`, **Base UI, no Radix** —
-  cuidado: no existe `asChild`, es `render={<Link .../>}` +
-  `nativeButton={false}`; `Select` no resuelve el label solo, necesita
-  `children` función).
-- Flujo Futbolero completo: Buscar → Detalle (fotos + amenidades) →
-  Resumen/pago → Subir comprobante → Estado en tiempo real → Mis Reservas
-  (tabs Activas/Pasadas).
-- Flujo AdminCancha: Dashboard multi-cancha → Validaciones (cola global) →
-  Insights (ocupación, ingresos, cancelación, rating, clientes recurrentes)
-  → Info de cancha (fotos, amenidades, selector multi-cancha) → Horarios.
-- `roadmap-producto.md` Fase 0 (look & feel) ejecutada. Fases 1-3
-  pendientes.
+## Estado del repo / entorno
 
-Documentos vivos en el repo (todos con contexto que un agente nuevo
-debería leer antes de tocar código):
-- `SPEC.md` — spec funcional original, fuente de verdad del negocio.
-- `plan-ui-ux-canchas-fut5-cr.md` — spec de UI/UX.
-- `DECISIONS.md` — **el más importante**, registro cronológico de cada
-  decisión no obvia y por qué. Leer antes de asumir cualquier cosa rara en
-  el código.
-- `roadmap-producto.md` — hoja de ruta de producto (Fase 0 hecha, 1-3 no).
-- `plan-mejoras.md` — backlog de QA post-Fase-0-3 (ejecutado).
-- `plan-mejoras-integral.md` — mismo backlog visto desde 5 lentes (PO, Eng
-  Manager, SWE, BA, Usuario) — tiene hallazgos que `roadmap-producto.md` no
-  repite (sin staging, sin CI, sin tests, login como vulnerabilidad real,
-  no-show no medible, etc.).
-- `plan-monetizacion-admin.md` — estrategia de negocio, no ejecutada,
-  propuesta para decidir con el usuario.
+- **Local**: `/Users/juliangarro/Downloads/canchas-fut5-cr` (conectado a
+  este agente vía bridge de dispositivo — carpeta `Downloads` autorizada).
+- **Rama actual**: `rediseno-organic`, sin push. `main` sigue como estaba
+  antes de esta sesión (rename "Dale Cancha" ya pusheado previamente).
+- **Supabase**: proyecto real de producción (mismo que documenta el
+  handoff anterior) — cualquier prueba manual de este rediseño (login,
+  reservar, subir comprobante) escribe ahí, no hay ambiente de staging.
+- Identidad de git configurada localmente en este sandbox (no global):
+  `user.name "juliangarro"`, `user.email` con el noreply de GitHub que ya
+  usaban los commits existentes.
 
-## Archivos en vuelo / sin commitear
+## Documentos vivos relevantes
 
-Ninguno. Working tree limpio (`git status` sin salida) al momento de este
-handoff. Si al retomar hay cambios sin commitear que no reconocés, correr
-`git status` y `git diff` antes de asumir nada — alguien pudo haber seguido
-trabajando.
+- `plan-rediseno-dale-cancha.md` — el plan que se está ejecutando ahora,
+  fuente de verdad de qué falta.
+- `DECISIONS.md` — registro de D1-D13 (esta sesión) + decisiones previas.
+- `design_handoff_dale_cancha/` — handoff de diseño original (paleta,
+  componentes, referencia visual) que originó el plan.
+- El handoff de 2026-09-15 (rename + hallazgos de la sesión anterior,
+  cuentas de prueba, simulación de producción) — su contenido histórico
+  sigue siendo válido pero ya no está en este archivo; recuperarlo de
+  `git log -p -- HANDOFF.md` si hace falta.
 
-## Intentos fallidos / bugs reales encontrados esta sesión (para no repetirlos)
+## Próximos pasos
 
-1. **Server Component pasando una función a un Client Component.**
-   `SelectorCancha` recibía `construirHref={(id) => ...}` desde una página
-   server — rompe en runtime ("Functions cannot be passed directly to
-   Client Components"), **no lo agarra `npm run build`**. Se resolvió
-   pasando un string (`sufijoRuta`) y armando el href adentro del client
-   component. Lección: cualquier prop de un Server Component a un Client
-   Component tiene que ser serializable.
-2. **Base UI `Select.Value` no resuelve el label automáticamente** — sin
-   pasarle `children` como función, muestra el `value` crudo (el UUID) en
-   vez del nombre. Hay que hacer
-   `<SelectValue>{(id) => items.find(...)?.label}</SelectValue>`.
-3. **`nativeButton` warnings** — cualquier `Button` de shadcn/base-nova que
-   renderiza como `<Link>` necesita `nativeButton={false}` explícito además
-   de `render={<Link .../>}`, si no tira un warning de accesibilidad en
-   consola (visto varias veces, cada vez que se agregó un botón-link nuevo
-   se me olvidó una vez).
-4. **Vercel Hobby limita Cron Jobs a 1x/día** — el cron de expiración de
-   reservas (diseñado para cada 5 min) rompía el deploy. Se bajó a 1x/día
-   como stopgap — ver DECISIONS.md, es una degradación real de una garantía
-   de negocio (SPEC.md 5.1.9), no solo un detalle técnico.
-5. **`.gitignore` con `.env*` nunca dejó commitear `.env.example`** —
-   heredado del scaffold de `create-next-app`, nadie lo notó hasta que se
-   revisó por qué el archivo plantilla nunca aparecía en `git status`.
-6. **Falsa alarma: error de hydration + warning de Checkbox** — aparecían
-   en consola y parecían bugs reales, pero eran historial acumulado de
-   cientos de Fast Refresh de la sesión (el dev server llevaba horas
-   corriendo). Se confirmó reiniciando el server + probando en una tab
-   nueva del navegador: cero errores. Lección para la próxima vez que algo
-   raro aparezca en consola después de mucho rato de sesión: reiniciar el
-   dev server y probar en una tab limpia antes de asumir que es un bug de
-   código.
-7. **Race condition de doble-reserva**: se verificó (no se "arregló", ya
-   funcionaba) disparando dos inserts concurrentes reales contra Supabase
-   vía REST API con service role — uno ganó (201), el otro fue rechazado
-   por el trigger. Prueba real, no solo lectura de código.
-
-## Cuentas de prueba (proyecto Supabase real, no un sandbox separado)
-
-- Admin real: `juliangarro26@gmail.com` (id `9a2b7bee-271a-4d57-8e4e-ecf9418d18f2`)
-  — administra 3 canchas reales ("Cancha los Perlitos", "Cancha La Milpa",
-  "Cancha fatima"). Usar esta cuenta para probar cualquier cosa
-  multi-cancha.
-- Futbolero de prueba: `futbolero.test@example.com`
-  (`13ad1a56-7698-4409-a0dd-538007c4ec98`).
-- Otro futbolero de prueba: `juli@gmail.com` (`b2128f4a-db14-4bf8-b227-010893755477`)
-  — origen desconocido, probablemente de una prueba manual del usuario
-  antes de esta sesión.
-- Login: solo email, sin contraseña (ver arriba) — entrar con cualquiera
-  de estos emails entra directo a esa cuenta.
-
-### Simulación de puesta en producción (2026-09-15, pedida explícitamente)
-
-3 AdminCancha nuevos, cada uno con su propia cancha y horarios, más 3
-Futboleros que reservaron y completaron el flujo completo (pago SINPE +
-comprobante + validación) contra el proyecto Supabase real — no datos
-sintéticos insertados por script, todo hecho navegando la app como lo haría
-un usuario real.
-
-**Admins:**
-- `admin.estadio.dalecancha@example.com` — Cancha El Estadio (Heredia),
-  id `1f146320-1f6c-4457-a052-bb52043e5997`, 3 horarios (16-18/9).
-- `admin.polideportivo.dalecancha@example.com` — Polideportivo Norte
-  (Alajuela), id `69574c8e-05ce-4c99-bcdc-6c04e27442dd`, 2 horarios.
-- `admin.villafut5.dalecancha@example.com` — Villa Fut5 (Cartago), id
-  `fb7b4345-f2db-43d4-956e-f736aafdc4f6`, 2 horarios.
-
-**Futboleros:**
-- `gerardo.futbolero.dalecancha@example.com` — reservó 2 veces (El Estadio
-  y Polideportivo Norte, distintas canchas) → cliente recurrente real en
-  los datos de Estadísticas.
-- `andrea.futbolera.dalecancha@example.com` — reservó Polideportivo Norte.
-- `kevin.futbolero.dalecancha@example.com` — reservó Villa Fut5.
-
-**Resultado:** 4 reservas creadas, 3 `confirmada` + 1 `rechazada` (Villa
-Fut5, motivo real: "El monto del comprobante no coincide con el precio del
-horario...") — se verificó que el Futbolero ve el motivo exacto en
-"Mis reservas → Pasadas" y que cada AdminCancha solo ve las reservas de su
-propia cancha en Validaciones (aislamiento entre canchas probado, no solo
-asumido).
-
-Nota de tooling: `computer` → `type` fue poco confiable para el campo de
-email en este entorno (una vez escribió "ju@de" en vez del email completo,
-probablemente autofill del navegador interfiriendo) — `form_input` (o
-`javascript_tool` seteando `.value` + disparando el evento `input`) fue
-consistentemente confiable. Preferir eso para cualquier campo de texto en
-sesiones futuras de este tipo.
-
-## Cómo verificar cambios (patrón usado toda la sesión)
-
-1. `npm run lint && npm run build` primero siempre.
-2. Dev server vía `mcp__Claude_Browser` `preview_start` (name "dev").
-3. Navegar con `navigate` + `computer` (screenshot) — si el pane sale
-   "not displayed", usar `read_page`/`get_page_text` en su lugar (el
-   usuario tiende a cerrar el panel; no bloquea la verificación).
-4. Ojo: todas las tabs del Browser comparten cookies (mismo perfil) — para
-   probar dos roles a la vez hay que loguear/desloguear en secuencia, no se
-   puede tener Futbolero y AdminCancha simultáneos en tabs distintas sin
-   pisarse la sesión.
-5. Para simular subir un archivo (no hay acción nativa de upload en esta
-   herramienta de navegador): `javascript_tool` inyectando un `File` +
-   `DataTransfer` en el `<input type="file">` y disparando eventos `input`
-   y `change` — patrón ya usado para comprobantes y fotos de cancha.
-6. Nunca pushear sin que el usuario lo pida explícitamente en ese momento
-   — pasó varias veces en la sesión que se commiteó y se esperó confirmación
-   antes de `git push`.
-
-## Próximos pasos, en orden
-
-1. **Ejecutar el rename + slop fixes de la tabla de arriba** (la tarea
-   pendiente de esta sesión).
-2. Verificar en navegador (desktop + mobile), confirmar con el usuario, y
-   recién ahí preguntar si pushear.
-3. Seguir con **Fase 1 de `roadmap-producto.md`**: reglas de horario
-   recurrentes (el dolor de activación más grande hoy — crear horarios uno
-   por uno es tedioso), editar/borrar cancha y horarios, login real.
-4. Considerar los hallazgos cross-lente de `plan-mejoras-integral.md` que
-   todavía no tienen dueño: sin tests automatizados, sin staging/CI/
-   observabilidad, sin tracking de eventos — ninguno tiene fecha, pero el
-   login inseguro y la falta de notificaciones aparecen en 3+ de las 5
-   lentes (la tabla de prioridad real está al final de ese archivo).
-5. `plan-monetizacion-admin.md` sigue siendo una propuesta sin decisión del
-   usuario — no implementar nada de ahí sin confirmar primero.
+1. ~~Chequeo visual real en la Mac del usuario~~ — hecho el 2026-09-15/16,
+   ver la actualización arriba y la sección 8 del plan para el detalle.
+   Quedan sin verificar por falta de datos de prueba: los 4 estados de
+   comprobante que requieren subir un archivo real (herramienta de
+   navegador no puede automatizar file picker), los estados
+   `pendiente_validacion`/`rechazada`/`cancelada`/`vencida` de una
+   reserva, el banner del admin "con pendientes"/"vencido", y el heatmap
+   de insights con datos reales (no hay reservas confirmadas suficientes
+   en el rango). VoiceOver tampoco es verificable desde ese entorno.
+2. **Preguntarle al usuario** si hace merge de `rediseno-organic` a
+   `main` y si empuja — no se hizo ni se preguntó todavía en esta
+   sesión. `main` sigue como estaba antes de este rediseño. También
+   preguntar si quiere arreglar el hallazgo de texto interactivo a 15px
+   (ver sección 8) antes o después del merge, dado que es sistémico.
+3. Si el merge se pide: revisar que no haya conflictos con cambios que
+   hayan entrado a `main` en paralelo (no debería, pero no se verificó
+   en esta sesión), mergear, y recién ahí `git push` — nunca antes de
+   que el usuario lo pida explícitamente en ese momento.
+4. Los riesgos R1-R6 de la sección 6 del plan (ver también el cierre en
+   DECISIONS.md del 2026-09-16) siguen sin resolver — ninguno se tocó en
+   este rediseño a propósito, son decisiones de producto/negocio
+   separadas, no de este trabajo visual.

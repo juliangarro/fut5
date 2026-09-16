@@ -7,6 +7,7 @@ import { OcupacionHeatmap } from "@/components/admin/OcupacionHeatmap";
 import { IngresosTrend } from "@/components/admin/IngresosTrend";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { formatearColones } from "@/lib/formato";
 import { cn } from "@/lib/utils";
 
 const ETIQUETAS_PERIODO: Record<PeriodoKey, string> = {
@@ -42,20 +43,19 @@ export default async function InsightsPage({
   const deltaIngresos = calcularDelta(datos.ingresos, datos.ingresosPeriodoAnterior);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-[22px] pt-[52px] pb-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Estadísticas</h1>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-border p-0.5">
+        <h1 className="text-[32px] font-bold">Estadísticas</h1>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-[5px] rounded-full bg-card p-[5px]">
             {(Object.keys(PERIODOS) as PeriodoKey[]).map((key) => (
               <Link
                 key={key}
                 href={`/admin/insights?periodo=${key}`}
+                aria-current={key === periodoKey ? "true" : undefined}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium",
-                  key === periodoKey
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                  "flex h-10 items-center rounded-full px-4 text-sm font-semibold",
+                  key === periodoKey ? "bg-primary text-primary-foreground" : "text-foreground"
                 )}
               >
                 {ETIQUETAS_PERIODO[key]}
@@ -64,7 +64,6 @@ export default async function InsightsPage({
           </div>
           <Button
             variant="outline"
-            size="sm"
             nativeButton={false}
             render={<a href={`/api/insights/exportar?periodo=${periodoKey}`} />}
           >
@@ -74,13 +73,17 @@ export default async function InsightsPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Ingresos confirmados"
-          value={`₡${datos.ingresos.toLocaleString("es-CR")}`}
+          value={formatearColones(datos.ingresos)}
           delta={deltaIngresos}
         />
-        <StatCard label="Ocupación" value={`${datos.ocupacionPct.toFixed(0)}%`} />
+        <StatCard
+          label="Ocupación"
+          value={`${datos.ocupacionPct.toFixed(0)}%`}
+          detalle="de los horarios publicados"
+        />
         <StatCard
           label="Tasa de cancelación"
           value={`${datos.tasaCancelacionPct.toFixed(0)}%`}
@@ -89,25 +92,26 @@ export default async function InsightsPage({
         <StatCard
           label="Rating promedio"
           value={datos.ratingPromedio !== null ? datos.ratingPromedio.toFixed(1) : "—"}
+          detalle={datos.totalCalificaciones > 0 ? `${datos.totalCalificaciones} calificaciones` : undefined}
         />
       </div>
 
-      <Card className="gap-3 px-4">
-        <h2 className="font-medium">Ocupación por día y hora</h2>
+      <Card className="gap-4 px-6 py-[22px]">
+        <h2 className="text-[19px] font-bold">Ocupación por día y hora</h2>
         <OcupacionHeatmap datos={datos.heatmap} />
       </Card>
 
-      <Card className="gap-3 px-4">
-        <h2 className="font-medium">Ingresos por semana</h2>
+      <Card className="gap-4 px-6 py-[22px]">
+        <h2 className="text-[19px] font-bold">Ingresos por semana</h2>
         <IngresosTrend datos={datos.ingresosPorSemana} />
       </Card>
 
-      <Card className="gap-3 px-4">
+      <Card className="gap-4 px-6 py-[22px]">
         <div className="flex items-center justify-between">
-          <h2 className="font-medium">Clientes recurrentes</h2>
+          <h2 className="text-[19px] font-bold">Clientes recurrentes</h2>
           {datos.proporcionRecurrentesPct !== null && (
             <span className="text-sm text-muted-foreground">
-              {datos.proporcionRecurrentesPct.toFixed(0)}% recurrentes en este período
+              {datos.proporcionRecurrentesPct.toFixed(0)}% del período
             </span>
           )}
         </div>
@@ -118,11 +122,10 @@ export default async function InsightsPage({
         ) : (
           <ul className="flex flex-col divide-y divide-border">
             {datos.clientesTop.map((c) => (
-              <li key={c.futboleroId} className="flex items-center justify-between py-2 text-sm">
+              <li key={c.futboleroId} className="flex items-center justify-between py-2.5 text-[15px]">
                 <span>{c.nombre}</span>
                 <span className="text-muted-foreground">
-                  {c.reservasConfirmadas} reserva{c.reservasConfirmadas > 1 ? "s" : ""} confirmada
-                  {c.reservasConfirmadas > 1 ? "s" : ""}
+                  {c.reservasConfirmadas} confirmada{c.reservasConfirmadas > 1 ? "s" : ""}
                 </span>
               </li>
             ))}

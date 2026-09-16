@@ -28,7 +28,7 @@ export function SelectorCancha({
       value={canchaActualId}
       onValueChange={(id) => router.push(`/admin/canchas/${id}/${sufijoRuta}`)}
     >
-      <SelectTrigger className="h-10 w-full sm:w-72">
+      <SelectTrigger className="w-full sm:w-72">
         <SelectValue>
           {(id: string) => canchas.find((c) => c.id === id)?.nombre ?? id}
         </SelectValue>

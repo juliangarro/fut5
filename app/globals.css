@@ -2,11 +2,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand: var(--brand);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-sans);
   --color-success: var(--success);
@@ -54,91 +55,84 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  /* Paleta semántica — ver plan-ui-ux-canchas-fut5-cr.md sección 2.1 */
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #16a34a;
-  --primary-foreground: #ffffff;
-  --secondary: #0f172a;
-  --secondary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-  --destructive: #dc2626;
-  --danger: #dc2626;
-  --danger-foreground: #ffffff;
-  --success: #16a34a;
-  --success-foreground: #ffffff;
-  --warning: #d97706;
-  --warning-foreground: #ffffff;
-  --neutral: #64748b;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #16a34a;
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+@theme {
+  /* Rampas del sistema Organic (paso 100 → 900). Generan bg-/text-/border-/fill-* */
+  --color-neutral-100: #f9f4ed;  --color-neutral-200: #eee7db;  --color-neutral-300: #dcd3c4;
+  --color-neutral-400: #c0b6a5;  --color-neutral-500: #a19786;  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;  --color-neutral-800: #474238;  --color-neutral-900: #2e2b25;
+
+  --color-terracota: #c67139;
+  --color-terracota-100: #fff2eb; --color-terracota-200: #ffe1d0; --color-terracota-300: #ffc6a5;
+  --color-terracota-400: #f6a06b; --color-terracota-500: #d67f48; --color-terracota-600: #b2622d;
+  --color-terracota-700: #8c491a; --color-terracota-800: #643312; --color-terracota-900: #402310;
+
+  --color-sage: #7a8a5e;
+  --color-sage-100: #f0fae1; --color-sage-200: #e1eecc; --color-sage-300: #ccdbb2;
+  --color-sage-400: #aebf92; --color-sage-500: #8fa073; --color-sage-600: #728157;
+  --color-sage-700: #56633f; --color-sage-800: #3d472b; --color-sage-900: #272e1b;
+
+  /* Radios con nombre → rounded-card, rounded-panel, etc. */
+  --radius-celda: 9px;     /* celdas del heatmap */
+  --radius-thumb: 18px;    /* ícono del adjunto, miniatura admin */
+  --radius-slot: 20px;     /* pastilla de horario, filas de ayuda */
+  --radius-dia: 22px;      /* pastilla de día */
+  --radius-fila: 24px;     /* filas crema, tarjetas de rol */
+  --radius-card: 26px;     /* cards */
+  --radius-panel: 28px;    /* paneles admin, banner, ítem de la cola */
+  --radius-header: 32px;   /* cabeceras con esquinas inferiores, lámina del detalle */
+  --radius-sheet: 34px;    /* hoja inferior */
+
+  --shadow-sm: 0 1px 2px rgb(46 43 37 / 0.14);
+  --shadow-md: 0 3px 10px rgb(46 43 37 / 0.16);
+  --shadow-lg: 0 12px 32px rgb(46 43 37 / 0.22);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+:root {
+  /* Paleta Organic (sistema visual, Turno 2a) — ver plan-rediseno-dale-cancha.md sección 4 */
+  --background: #f5ead8;            /* crema */
+  --foreground: #201e1d;
+  --card: #ebddc5;                  /* arena */
+  --card-foreground: #201e1d;
+  --popover: #f5ead8;
+  --popover-foreground: #201e1d;
+  --brand: #c67139;                 /* acento sin texto encima (D7) */
+  --primary: #8c491a;               /* D7 accesible; alternativa fiel: #c67139 */
+  --primary-hover: #643312;         /* alternativa fiel: #b2622d */
+  --primary-active: #402310;        /* alternativa fiel: #8c491a */
+  --primary-foreground: #f5ead8;
+  --secondary: #ebddc5;
+  --secondary-foreground: #201e1d;
+  --muted: #eee7db;
+  --muted-foreground: #474238;      /* neutral 800 */
+  --accent: #eee7db;                /* fondo hover de ghost/outline */
+  --accent-foreground: #201e1d;
+  --destructive: #643312;
+  --danger: #643312;
+  --danger-foreground: #f5ead8;
+  --success: #56633f;               /* sage 700 */
+  --success-foreground: #f5ead8;
+  --warning: #8c491a;
+  --warning-foreground: #f5ead8;
+  --neutral: #474238;
+  --border: color-mix(in srgb, #201e1d 16%, transparent);  /* divider */
+  --input: #82796a;                 /* borde de input, 3.61:1 */
+  --ring: #8c491a;
+  --chart-1: #f5ead8; --chart-2: #ffc6a5; --chart-3: #d67f48; --chart-4: #8c491a; --chart-5: #402310; /* D10 */
+  --radius: 1rem;
+  --sidebar: #ebddc5; --sidebar-foreground: #201e1d;
+  --sidebar-primary: #8c491a; --sidebar-primary-foreground: #f5ead8;
+  --sidebar-accent: #eee7db; --sidebar-accent-foreground: #201e1d;
+  --sidebar-border: color-mix(in srgb, #201e1d 16%, transparent); --sidebar-ring: #8c491a;
 }
+
+@utility washed { filter: saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94); }
+@utility kicker { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-700); }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
+  * { @apply border-border; }
+  html { @apply font-sans; }
+  body { @apply bg-background text-foreground; }
+  h1, h2, h3, h4 { @apply font-bold tracking-[-0.02em]; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  svg.lucide { stroke-width: 2.75; }  /* verificar en el DOM que lucide-react 1.46 usa la clase "lucide" */
 }

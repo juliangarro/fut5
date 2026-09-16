@@ -37,6 +37,8 @@ El camino crítico del negocio es: buscar cancha → elegir horario → pagar �
 
 ## 2. Sistema de diseño (design tokens)
 
+> **Reemplazada por el sistema Organic** — ver plan-rediseno-dale-cancha.md §4.
+
 ### 2.1 Paleta de color
 
 Paleta semántica neutra, pensada para modo claro (modo oscuro es opcional post-MVP, no bloqueante).

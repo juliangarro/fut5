@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ImageOff } from "lucide-react";
-import { RatingResumen } from "./RatingResumen";
+import { Star } from "lucide-react";
+import { FotoCancha } from "@/components/shared/FotoCancha";
+import { formatearColones } from "@/lib/formato";
 
 export function CanchaCard({
   id,
@@ -20,29 +21,27 @@ export function CanchaCard({
   return (
     <Link
       href={`/futbolero/canchas/${id}`}
-      className="flex flex-col overflow-hidden rounded-xl border border-border bg-card ring-1 ring-foreground/5 transition hover:border-primary/40"
+      className="flex flex-col overflow-hidden rounded-card bg-card shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
-      <div className="flex aspect-video items-center justify-center bg-muted">
-        {fotoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={fotoUrl} alt={nombre} className="size-full object-cover" />
-        ) : (
-          <ImageOff className="size-8 text-muted-foreground" />
-        )}
-      </div>
-      <div className="flex flex-col gap-1 p-3">
-        <h3 className="font-medium text-foreground">{nombre}</h3>
-        {descripcion && (
-          <p className="line-clamp-2 text-sm text-muted-foreground">{descripcion}</p>
-        )}
-        <div className="mt-1 flex items-center justify-between">
-          <RatingResumen ratingPromedio={ratingPromedio} />
-          {precioDesde != null && (
-            <span className="text-sm font-medium text-foreground">
-              desde ₡{precioDesde.toLocaleString("es-CR")}
-            </span>
+      <FotoCancha url={fotoUrl} alt={nombre} className="h-24 w-full rounded-none" />
+      <div className="flex flex-col gap-0.5 pt-3 px-3.5 pb-3.5">
+        <h3 className="text-[15px] font-bold text-foreground">{nombre}</h3>
+        <div className="flex items-center gap-1 text-[13px] text-neutral-800">
+          {ratingPromedio > 0 ? (
+            <>
+              <Star className="size-3 shrink-0 fill-brand stroke-brand" />
+              <span>{ratingPromedio.toFixed(1)}</span>
+            </>
+          ) : (
+            <span>Nueva</span>
           )}
+          {descripcion && <span className="truncate">· {descripcion}</span>}
         </div>
+        {precioDesde != null && (
+          <span className="text-[15px] font-bold text-foreground">
+            desde {formatearColones(precioDesde)}
+          </span>
+        )}
       </div>
     </Link>
   );

@@ -33,7 +33,7 @@ export function RatingStars({
           <Star
             className={cn(
               tamañoIcono,
-              valor <= puntaje ? "fill-warning text-warning" : "fill-none text-border"
+              valor <= puntaje ? "fill-brand text-brand" : "fill-none text-border"
             )}
           />
         </button>

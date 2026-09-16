@@ -1,10 +1,38 @@
+import { formatearColones } from "@/lib/formato";
+
 const ALTO = 140;
 const ANCHO_BARRA = 24;
 const GAP = 12;
+const RADIO = 12;
+
+// Camino con esquinas redondeadas solo arriba — <rect rx> redondea las 4
+// esquinas, por eso se arma el <path> a mano.
+function pathBarraRedondeadaArriba(x: number, y: number, w: number, h: number, r: number) {
+  const radio = Math.min(r, h, w / 2);
+  return `M${x},${y + radio}
+    Q${x},${y} ${x + radio},${y}
+    L${x + w - radio},${y}
+    Q${x + w},${y} ${x + w},${y + radio}
+    L${x + w},${y + h}
+    L${x},${y + h}
+    Z`;
+}
+
+// Color por magnitud en 4 pasos, cortado en cuartiles de max (dataviz
+// secuencial de un solo hue, sobre la paleta terracota).
+function clasePorMagnitud(monto: number, max: number): string {
+  if (max === 0) return "fill-terracota-300";
+  const frac = monto / max;
+  if (frac <= 0.25) return "fill-terracota-300";
+  if (frac <= 0.5) return "fill-terracota-500";
+  if (frac <= 0.75) return "fill-terracota-700";
+  return "fill-terracota-900";
+}
 
 export function IngresosTrend({ datos }: { datos: { etiqueta: string; monto: number }[] }) {
   const max = Math.max(1, ...datos.map((d) => d.monto));
   const ancho = datos.length * (ANCHO_BARRA + GAP) + GAP;
+  const total = datos.reduce((suma, d) => suma + d.monto, 0);
 
   if (datos.every((d) => d.monto === 0)) {
     return (
@@ -16,42 +44,32 @@ export function IngresosTrend({ datos }: { datos: { etiqueta: string; monto: num
 
   return (
     <div className="overflow-x-auto">
-      <svg width={ancho} height={ALTO + 24} role="img" aria-label="Ingresos confirmados por semana">
+      <svg
+        viewBox={`0 0 ${ancho} ${ALTO + 24}`}
+        width="100%"
+        style={{ minWidth: ancho }}
+        role="img"
+        aria-label={`Ingresos confirmados por semana. Total del período: ${formatearColones(total)}.`}
+      >
         <line x1={0} y1={ALTO} x2={ancho} y2={ALTO} stroke="var(--border)" strokeWidth={1} />
         {datos.map((d, i) => {
           const alto = max > 0 ? (d.monto / max) * (ALTO - 8) : 0;
           const x = GAP + i * (ANCHO_BARRA + GAP);
-          const y = ALTO - alto;
+          const altoBarra = Math.max(alto, 2);
+          const y = ALTO - altoBarra;
           return (
             <g key={d.etiqueta}>
-              <rect
-                x={x}
-                y={y}
-                width={ANCHO_BARRA}
-                height={Math.max(alto, 2)}
-                rx={4}
-                className="fill-primary"
-              >
+              <path d={pathBarraRedondeadaArriba(x, y, ANCHO_BARRA, altoBarra, RADIO)} className={clasePorMagnitud(d.monto, max)}>
                 <title>
-                  {d.etiqueta}: ₡{d.monto.toLocaleString("es-CR")}
+                  {d.etiqueta}: {formatearColones(d.monto)}
                 </title>
-              </rect>
+              </path>
               {d.monto > 0 && (
-                <text
-                  x={x + ANCHO_BARRA / 2}
-                  y={y - 6}
-                  textAnchor="middle"
-                  className="fill-muted-foreground text-[10px]"
-                >
+                <text x={x + ANCHO_BARRA / 2} y={y - 6} textAnchor="middle" className="fill-neutral-800 text-[12px]">
                   {d.monto >= 1000 ? `${Math.round(d.monto / 1000)}k` : d.monto}
                 </text>
               )}
-              <text
-                x={x + ANCHO_BARRA / 2}
-                y={ALTO + 16}
-                textAnchor="middle"
-                className="fill-muted-foreground text-[10px]"
-              >
+              <text x={x + ANCHO_BARRA / 2} y={ALTO + 16} textAnchor="middle" className="fill-muted-foreground text-[13px]">
                 {d.etiqueta}
               </text>
             </g>

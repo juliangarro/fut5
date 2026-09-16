@@ -80,14 +80,14 @@ export function FotosCanchaUploader({
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {fotos.map((path) => (
-          <div key={path} className="group relative aspect-square overflow-hidden rounded-lg bg-muted">
+          <div key={path} className="group relative aspect-square overflow-hidden rounded-thumb bg-muted">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={urlPublica(path)} alt="Foto de la cancha" className="size-full object-cover" />
             <button
               type="button"
               onClick={() => borrarFoto(path)}
               aria-label="Quitar foto"
-              className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-neutral-900/60 text-background opacity-0 transition-opacity group-hover:opacity-100"
             >
               <X className="size-4" />
             </button>
@@ -98,10 +98,10 @@ export function FotosCanchaUploader({
             type="button"
             disabled={subiendo}
             onClick={() => inputRef.current?.click()}
-            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary disabled:opacity-50"
+            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-thumb border-2 border-dashed border-border text-muted-foreground hover:border-terracota-400 hover:text-terracota-700 disabled:opacity-50"
           >
             {subiendo ? <Loader2 className="size-6 animate-spin" /> : <ImagePlus className="size-6" />}
-            <span className="text-xs">{subiendo ? "Subiendo…" : "Agregar"}</span>
+            <span className="text-[13px] font-semibold">{subiendo ? "Subiendo…" : "Agregar"}</span>
           </button>
         )}
       </div>
@@ -116,7 +116,7 @@ export function FotosCanchaUploader({
           e.target.value = "";
         }}
       />
-      <p className="text-xs text-muted-foreground">
+      <p className="text-[13px] text-muted-foreground">
         Hasta {MAX_FOTOS} fotos. La primera es la que se muestra en la búsqueda.
       </p>
       {fotos.length === 0 && (

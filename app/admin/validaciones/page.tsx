@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { hoyCR } from "@/lib/fecha";
 import { obtenerUrlComprobanteFirmada } from "@/lib/obtenerUrlComprobanteFirmada";
 import { ColaValidacion, type ItemCola } from "@/components/ColaValidacion";
 
@@ -53,6 +54,7 @@ export default async function ValidacionesPage() {
         : null;
       return {
         reservaId: reserva.id,
+        canchaId: slot.cancha_id,
         canchaNombre: cancha?.nombre ?? "Cancha",
         futboleroNombre: futbolero?.nombre ?? "Futbolero",
         futboleroTelefono: futbolero?.telefono ?? null,
@@ -66,10 +68,5 @@ export default async function ValidacionesPage() {
     })
   );
 
-  return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Validaciones</h1>
-      <ColaValidacion items={items} />
-    </div>
-  );
+  return <ColaValidacion items={items} hoy={hoyCR()} />;
 }
