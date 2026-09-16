@@ -3,6 +3,38 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-16 — Panel del admin (Fase 10 del rediseño Organic) — definiciones de métrica
+
+Nuevo `lib/admin/panel.ts`, solo lectura. El plan pide dejar estas
+definiciones documentadas acá para que no queden implícitas en el código:
+
+- **Reservas hoy:** reservas en estado `confirmada` o `pendiente_validacion`
+  cuyo `slot.fecha` es hoy (hora de Costa Rica, vía `hoyCR()`).
+- **Ingresos hoy:** suma de `monto` de las reservas `confirmada` (no
+  `pendiente_validacion`) cuyo `slot.fecha` es hoy — subtítulo "confirmados"
+  en el StatCard, para no confundir con lo que todavía puede rechazarse.
+- **Delta de "Reservas hoy" vs. ayer:** `reservasHoy - reservasAyer`, solo
+  si existían horarios (`slots`) cargados ayer para alguna cancha del admin
+  — si no había horarios ayer, no hay base real de comparación y el delta
+  queda `null` (el StatCard no muestra la línea). No se aplica el mismo
+  criterio de "reservas" a ayer: se cuentan con el mismo filtro de estado
+  (`confirmada`/`pendiente_validacion`) para que la comparación sea
+  consistente.
+- **Ocupación (7 días) y Rating:** se reusan tal cual de
+  `calcularInsights(supabase, canchaIds, 7)` (`lib/insights.ts`, sin
+  tocar) — `ocupacionPct`, `ratingPromedio`, `totalCalificaciones`. La
+  ocupación no lleva delta: `calcularInsights` no expone el período
+  anterior de ocupación, y agregarlo implicaría tocar `lib/insights.ts`,
+  fuera del alcance de esta fase.
+- **Horarios esta semana (por cancha):** conteo de `slots` con `fecha`
+  entre hoy y hoy+6 (7 días, límite `sumarDiasCR(hoy, 6)`), agrupado por
+  `cancha_id`. Se muestra en la fila de cada cancha en "Mis canchas"
+  ("★ 4.8 · 12 horarios esta semana").
+- **Próximos partidos:** hasta 5 reservas `confirmada` con `slot.fecha >=
+  hoy`, ordenadas por fecha y hora de inicio ascendente. Sin límite
+  superior de fecha (no se acotó a los próximos N días) — en la escala
+  actual del producto no es un problema de performance real.
+
 ## 2026-09-15 — Rediseño Organic (Turno 2a) — decisiones D1–D13
 
 Ver `plan-rediseno-dale-cancha.md` para el plan completo (secciones 1–4) y

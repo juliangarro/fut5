@@ -552,7 +552,7 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 **Archivos:** `app/admin/page.tsx`, `components/shared/StatCard.tsx`, `lib/admin/panel.ts` (nuevo, solo lectura)
 **Commit:** `feat(ui): panel del admin con banner, métricas del día y próximos partidos`
 
-- [ ] `lib/admin/panel.ts`: una función `datosPanel(supabase, adminId)` con lecturas nuevas. **Las definiciones van a DECISIONS.md:**
+- [x] `lib/admin/panel.ts`: una función `datosPanel(supabase, adminId)` con lecturas nuevas. **Las definiciones van a DECISIONS.md:**
   - `reservasHoy`: reservas `confirmada` + `pendiente_validacion` cuyo `slot.fecha` = hoy (CR).
   - `ingresosHoy`: suma de `monto` de las reservas `confirmada` con `slot.fecha` = hoy. Subtítulo "confirmados".
   - `ocupacionSemana` y `rating` + `totalCalificaciones`: reusar `calcularInsights(supabase, canchaIds, 7)`.
@@ -560,11 +560,11 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
   - `horariosSemana` por cancha: conteo de `slots` con `fecha` en [hoy, hoy+6].
   - `proximosPartidos`: hasta 5 reservas `confirmada` con `fecha ≥ hoy`, ordenadas por fecha y hora, con el nombre del futbolero, la cancha y el monto.
   - `pendientes`: desde `contarPendientes()`.
-- [ ] Encabezado:
+- [x] Encabezado:
   - Kicker con la fecha larga ("Martes 16 de setiembre").
   - "Buenas, {primer nombre}" en 700/34px.
   - `Button variant="outline"` con `Plus` "Nueva cancha" a la derecha.
-- [ ] **Banner** (link a la cola):
+- [x] **Banner** (link a la cola):
   - Con pendientes: `bg-terracota-100 border border-terracota-300 rounded-panel px-7 py-6 gap-[22px]`.
     - Círculo de 58px `bg-brand` con `ClipboardCheck` crema.
     - Título en 700/22px `text-terracota-900`, con el plural que ya existe.
@@ -573,19 +573,19 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
       - si ya pasó: "Hay comprobantes vencidos esperando respuesta." (ver R2).
     - `Button` "Ir a la cola".
   - Sin pendientes: `bg-sage-100 border-sage-300`, `CircleCheck`, "Estás al día".
-- [ ] `StatCard`:
+- [x] `StatCard`:
   - `rounded-card bg-card px-[22px] py-5 gap-1.5`, label en 14px, valor en 700/30px.
   - Subtítulo opcional (prop `detalle`, 14px `text-neutral-800`).
   - Delta con ícono y texto: si es bueno, `text-success font-semibold`; si es malo, `text-terracota-800`.
   - Soporta deltas en "pts" (prop `unidadDelta: "%" | "pts"`).
   - Rejilla: `grid-cols-2 lg:grid-cols-4 gap-4`.
-- [ ] **Dos paneles** (`lg:flex`):
+- [x] **Dos paneles** (`lg:flex`):
   - "Mis canchas" (`flex-1 bg-card rounded-panel px-6 py-[22px]`, título en 700/19px, link "Ver todas" a `/admin/canchas`). Filas `bg-background rounded-fila px-4 py-3.5`:
     - `FotoCancha` de 72×56 `rounded-thumb`;
     - nombre en 700/17px y "★ 4.8 · 12 horarios esta semana" en 14px;
     - botones `outline sm` "Info" (se mantiene porque es la única entrada a editar la cancha) y "Horarios".
   - "Próximos partidos" (`lg:w-80`): filas con la hora en 700/15px (w-13), nombre en 15/600 y "{cancha} · ₡monto" en 14px. Sin datos: "No hay partidos confirmados próximos."
-- [ ] El estado vacío "Todavía no registraste ninguna cancha" se mantiene.
+- [x] El estado vacío "Todavía no registraste ninguna cancha" se mantiene.
 
 ### Fase 11 — Cola de validaciones
 **Archivos:** `app/admin/validaciones/page.tsx`, `components/ColaValidacion.tsx`, `app/admin/validaciones/loading.tsx`
