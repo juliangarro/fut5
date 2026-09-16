@@ -536,17 +536,17 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 **Archivos:** `app/futbolero/reservas/page.tsx`, `ListaReservas.tsx`, `loading.tsx`
 **Commit:** `feat(ui): mis reservas con tabs en píldora y línea de qué sigue`
 
-- [ ] `page.tsx`: agregar `hora_fin` al select de `slots` (lectura nueva). `ReservaConDatos` suma `horaFin`.
-- [ ] Título "Mis reservas" en 700/28px (`px-[22px] pt-[52px]`). `Tabs` en píldora a todo el ancho: Activas / Pasadas.
-- [ ] Fila (`Link`), `rounded-card bg-card px-[18px] py-4`:
+- [x] `page.tsx`: agregar `hora_fin` al select de `slots` (lectura nueva). `ReservaConDatos` suma `horaFin`.
+- [x] Título "Mis reservas" en 700/28px (`px-[22px] pt-[52px]`). `Tabs` en píldora a todo el ancho: Activas / Pasadas.
+- [x] Fila (`Link`), `rounded-card bg-card px-[18px] py-4`:
   - A la izquierda, el nombre en 700/17px y "hoy · 18:00–19:00" / "sáb 20 · 9:00–10:00" en 15px (`formatearDiaCorto`, con "hoy" y "mañana" relativos).
   - A la derecha, `EstadoReservaBadge`.
   - Línea "qué sigue" en 14px:
     - `pendiente_validacion`: "Te avisamos cuando la cancha confirme el pago." (la fila además lleva `shadow-sm`);
     - `creada`: "Falta adjuntar el comprobante.";
     - el resto, sin línea.
-- [ ] Estados vacíos: se mantienen los textos actuales.
-- [ ] `loading.tsx`: título, píldora de tabs y 3 filas de radio 26.
+- [x] Estados vacíos: se mantienen los textos actuales.
+- [x] `loading.tsx`: título, píldora de tabs y 3 filas de radio 26.
 
 ### Fase 10 — Panel del admin
 **Archivos:** `app/admin/page.tsx`, `components/shared/StatCard.tsx`, `lib/admin/panel.ts` (nuevo, solo lectura)

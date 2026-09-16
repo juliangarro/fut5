@@ -27,7 +27,7 @@ export default async function MisReservasPage() {
 
   const slotIds = [...new Set((reservas ?? []).map((r) => r.slot_id))];
   const { data: slots } = slotIds.length
-    ? await supabase.from("slots").select("id, fecha, hora_inicio, cancha_id").in("id", slotIds)
+    ? await supabase.from("slots").select("id, fecha, hora_inicio, hora_fin, cancha_id").in("id", slotIds)
     : { data: [] };
 
   const canchaIds = [...new Set((slots ?? []).map((s) => s.cancha_id))];
@@ -50,15 +50,11 @@ export default async function MisReservasPage() {
         canchaNombre: cancha?.nombre ?? "Cancha",
         fecha: slot.fecha,
         horaInicio: slot.hora_inicio,
+        horaFin: slot.hora_fin,
         activa: esActiva(reserva.estado, slot.fecha, hoy),
       },
     ];
   });
 
-  return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Mis reservas</h1>
-      <ListaReservas reservas={reservasConDatos} />
-    </div>
-  );
+  return <ListaReservas reservas={reservasConDatos} hoy={hoy} />;
 }
