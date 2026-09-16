@@ -1,17 +1,17 @@
 import Link from "next/link";
-import { ClipboardCheck, ImageOff } from "lucide-react";
+import { redirect } from "next/navigation";
+import { ImageOff, LandPlot } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { contarPendientes } from "@/lib/admin/contarPendientes";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 
-export default async function AdminDashboard() {
+export default async function CanchasAdminPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const { data: canchas } = await supabase
     .from("canchas")
@@ -19,38 +19,10 @@ export default async function AdminDashboard() {
     .eq("admin_id", user.id)
     .order("created_at", { ascending: false });
 
-  const { total: totalPendientes } = await contarPendientes(supabase, user.id);
-
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Panel</h1>
-
-      <Link href="/admin/validaciones">
-        <Card
-          className={
-            totalPendientes > 0
-              ? "flex-row items-center justify-between border-warning/30 bg-warning/10 px-4 py-4"
-              : "flex-row items-center justify-between px-4 py-4"
-          }
-        >
-          <div className="flex items-center gap-3">
-            <ClipboardCheck
-              className={totalPendientes > 0 ? "size-6 text-warning" : "size-6 text-muted-foreground"}
-            />
-            <div>
-              <p className="font-medium">
-                {totalPendientes > 0
-                  ? `${totalPendientes} comprobante${totalPendientes > 1 ? "s" : ""} por validar`
-                  : "No hay comprobantes pendientes"}
-              </p>
-              <p className="text-sm text-muted-foreground">Ver cola de validaciones</p>
-            </div>
-          </div>
-        </Card>
-      </Link>
-
+    <div className="flex flex-col gap-5 px-5 pt-[52px] pb-6 lg:px-0 lg:pt-0">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Mis canchas</h2>
+        <h1 className="text-2xl font-bold lg:text-[32px]">Mis canchas</h1>
         <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/admin/canchas/nueva" />}>
           + Nueva cancha
         </Button>
@@ -58,7 +30,7 @@ export default async function AdminDashboard() {
 
       {(canchas ?? []).length === 0 ? (
         <EmptyState
-          icono={ClipboardCheck}
+          icono={LandPlot}
           titulo="Todavía no registraste ninguna cancha"
           descripcion="Creá tu primera cancha para empezar a recibir reservas."
           accion={{ texto: "Crear cancha", href: "/admin/canchas/nueva" }}
@@ -72,20 +44,18 @@ export default async function AdminDashboard() {
               : null;
             return (
               <li key={cancha.id}>
-                <Card className="flex-row flex-wrap items-center gap-3 px-3 py-3">
-                  <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                <Card className="flex-row flex-wrap items-center gap-3 rounded-fila bg-background px-4 py-3.5 shadow-none">
+                  <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-thumb bg-muted">
                     {fotoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={fotoUrl} alt={cancha.nombre} className="size-full object-cover" />
+                      <img src={fotoUrl} alt={cancha.nombre} className="size-full object-cover washed" />
                     ) : (
                       <ImageOff className="size-5 text-muted-foreground" />
                     )}
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{cancha.nombre}</p>
-                    <p className="text-sm text-muted-foreground">
-                      ⭐ {cancha.rating_promedio.toFixed(1)}
-                    </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-bold text-[17px]">{cancha.nombre}</p>
+                    <p className="text-sm text-muted-foreground">★ {cancha.rating_promedio.toFixed(1)}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button
