@@ -620,16 +620,16 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 **No se tocan:** `lib/insights.ts` ni `app/api/insights/exportar`.
 **Commit:** `feat(ui): estadísticas con heatmap y barras Organic`
 
-- [ ] Encabezado:
+- [x] Encabezado:
   - "Estadísticas" en 700/32px.
   - Selector de período en píldora: links 7 / 30 / 90 días de 40px, activo en `bg-primary`, con `aria-current`. El query param no cambia.
   - `Button variant="outline"` con `Download` "Exportar CSV".
-- [ ] StatCards:
+- [x] StatCards:
   - "Ingresos confirmados" + delta ("+14% vs. período anterior").
   - "Ocupación" con detalle "de los horarios publicados".
   - "Tasa de cancelación" (`subiendoEsBueno={false}`, sin delta porque no hay dato anterior).
   - "Rating promedio" con detalle "{totalCalificaciones} calificaciones", un campo que ya existe en `DatosInsights`.
-- [ ] `OcupacionHeatmap`:
+- [x] `OcupacionHeatmap`:
   - Grilla `grid-cols-[auto_repeat(N,1fr)] gap-[5px]` a todo el ancho del panel.
   - Celdas `h-[30px] rounded-celda`.
   - Horas en 12px, días en 13px.
@@ -638,13 +638,13 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
   - Cada celda lleva `aria-label="Viernes 18:00: 4 reservas"` además del `title`. Un `<table className="sr-only">` equivalente es opcional.
   - **Línea de lectura** al pie (14px), **calculada con los datos** y nunca fija: "Tu franja más pedida es el {día} a las {hora}." (la celda de mayor valor). Si hay empate o muy pocos datos (menos de 5 reservas), la línea no se muestra.
   - El rango de horas es el real de los datos. El vacío conserva el texto actual.
-- [ ] `IngresosTrend`:
+- [x] `IngresosTrend`:
   - SVG con `viewBox` y `width="100%"` (responsivo).
   - Barras con radio de 12px **solo arriba** (usar `<path>`, porque `rect rx` redondea las cuatro esquinas).
   - Color por magnitud en 4 pasos (`fill-terracota-300`, `-500`, `-700`, `-900`, con cortes en cuartiles de `max`).
   - Valor abreviado arriba ("486k", 12px `fill-neutral-800`), etiqueta de semana abajo (13px) y línea base `stroke-border`.
   - `aria-label` con el resumen. Se mantiene `<title>` por barra.
-- [ ] "Clientes recurrentes": "{pct}% del período" a la derecha y filas "Nombre — N confirmadas".
+- [x] "Clientes recurrentes": "{pct}% del período" a la derecha y filas "Nombre — N confirmadas".
 
 ### Fase 13 — Pantallas sin diseño, barrido y documentación
 **Commit:** `feat(ui): barrido final del rediseño + docs`
