@@ -5,6 +5,7 @@ import { SelectorCancha } from "@/components/admin/SelectorCancha";
 import { FotosCanchaUploader } from "@/components/admin/FotosCanchaUploader";
 import { InfoCanchaForm } from "./InfoCanchaForm";
 import { Card } from "@/components/ui/card";
+import { BotonVolver } from "@/components/shared/BotonVolver";
 
 export default async function InfoCanchaPage({
   params,
@@ -34,9 +35,12 @@ export default async function InfoCanchaPage({
     .order("created_at", { ascending: true });
 
   return (
-    <div className="flex max-w-lg flex-col gap-6">
+    <div className="flex max-w-lg flex-col gap-5 px-[22px] pt-[52px] pb-8">
       <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold">Información de la cancha</h1>
+        <div className="flex items-center gap-3">
+          <BotonVolver href="/admin" aria-label="Volver al panel" />
+          <h1 className="text-[28px] font-bold">Información de la cancha</h1>
+        </div>
         <SelectorCancha
           canchas={misCanchas ?? []}
           canchaActualId={canchaId}
@@ -44,12 +48,12 @@ export default async function InfoCanchaPage({
         />
       </div>
 
-      <Card className="gap-3 px-4">
-        <h2 className="font-medium">Fotos</h2>
+      <Card className="gap-3 px-5 py-5">
+        <h2 className="text-[17px] font-bold">Fotos</h2>
         <FotosCanchaUploader canchaId={canchaId} fotosIniciales={cancha.fotos ?? []} />
       </Card>
 
-      <Card className="px-4">
+      <Card className="px-5 py-5">
         <InfoCanchaForm
           canchaId={canchaId}
           cancha={{

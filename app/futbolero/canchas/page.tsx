@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ListaCanchas } from "./ListaCanchas";
 import { parsearAmenidades } from "@/lib/amenidades";
 import { hoyCR, sumarDiasCR } from "@/lib/fecha";
+import { Aviso } from "@/components/shared/Aviso";
 
 export default async function CanchasPage() {
   const supabase = await createClient();
@@ -22,7 +23,11 @@ export default async function CanchasPage() {
     .order("rating_promedio", { ascending: false });
 
   if (error) {
-    return <p className="px-5 pt-[52px] text-danger">No se pudieron cargar las canchas: {error.message}</p>;
+    return (
+      <div className="px-[22px] pt-[52px]">
+        <Aviso tono="error">No se pudieron cargar las canchas: {error.message}</Aviso>
+      </div>
+    );
   }
 
   // D4: mínimo de slots.precio disponible en los próximos 14 días, por cancha.

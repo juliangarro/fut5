@@ -3,6 +3,53 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-16 — Cierre del rediseño Organic (Fases 0-13 de plan-rediseno-dale-cancha.md)
+
+Las 13 fases del rediseño se ejecutaron de corrido en la rama
+`rediseno-organic` (D12), un commit por fase, sin push (el usuario decide
+el merge a `main` aparte — ver HANDOFF.md). Resumen de cierre:
+
+- **D1-D13** (definidas en la entrada del 2026-09-15 arriba): todas
+  resueltas a su default recomendado, sin cambios durante la ejecución.
+- **Métricas del panel del admin** (Fase 10): ver la entrada del
+  2026-09-16 "Panel del admin" arriba — reservasHoy, ingresosHoy, delta
+  vs. ayer, ocupación/rating (reusan `calcularInsights`), horarios de la
+  semana por cancha, próximos partidos.
+- **Qué quedó fuera de este plan** (documentado como riesgos en la
+  sección 6 del plan, ninguno se resuelve acá):
+  - R1/R2 (severidad alta): una reserva `creada` no tiene plazo real, y
+    el cron de expiración corre 1 vez al día (límite de Vercel Hobby) —
+    el copy nuevo de "vence a las HH:MM" en `ReservaEstado`/la cola de
+    validaciones es honesto sobre el dato que existe, pero no arregla el
+    problema de fondo.
+  - R3 (media): la URL firmada del comprobante expira a los 5 minutos;
+    si el admin deja la cola de validaciones abierta más tiempo, la
+    imagen se rompe sin refresco automático.
+  - R4 (alta, conocida): el login sigue sin verificar identidad — la
+    piel nueva no cambia ni oculta esto, sigue siendo una vulnerabilidad
+    temporal aceptada.
+  - R5/R6: sin tests/CI automatizados y sin ambiente de staging — toda
+    la verificación de este rediseño fue manual (lint + tsc + revisión
+    de código en este sandbox, chequeo visual pendiente en la Mac del
+    usuario).
+- **Limitación de verificación de esta sesión**: `npm run build` no pudo
+  correr en el sandbox donde se ejecutó el plan (proxy de red bloquea
+  `fonts.googleapis.com`, ver HANDOFF.md) — cada fase se verificó con
+  `npm run lint` + `npx tsc --noEmit` + revisión de código, decisión
+  explícita del usuario. La matriz de verificación visual de la sección 8
+  del plan (rutas a 390×844 y 1280×832, accesibilidad transversal)
+  **queda pendiente**, para correr en un entorno donde `npm run build`/
+  `npm run dev` funcionen.
+- **Auditoría de grep de la Fase 13**: sin resultados en hex sueltos,
+  paleta Tailwind default (zinc/gray/etc.), `bg/text-black`/`white`, y
+  clases semánticas sin número (`text-danger`, `fill-warning`). Dos
+  hallazgos quedaron, ambos justificados: `components/shared/SlotPicker.tsx`
+  usa `toLocaleDateString` sobre un `Date` construido y usado enteramente
+  en el cliente (sin el bug de UTC de D11, que es un problema de cómputo
+  en el servidor) para un selector de 14 días con forma de datos distinta
+  a la de `lib/formato.ts`; y `washed` solo aparece sobre fotos de
+  cancha, nunca sobre comprobantes de pago.
+
 ## 2026-09-16 — Panel del admin (Fase 10 del rediseño Organic) — definiciones de métrica
 
 Nuevo `lib/admin/panel.ts`, solo lectura. El plan pide dejar estas

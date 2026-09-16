@@ -1,11 +1,13 @@
-# Handoff — sesión del 2026-09-16 (rediseño Organic, en curso)
+# Handoff — sesión del 2026-09-16 (rediseño Organic, Fases 0-13 completas)
 
 > Para el siguiente agente (o para retomar en una sesión nueva). Reemplaza
 > el handoff anterior (2026-09-15, rename a "Dale Cancha" — esa tarea ya
 > se ejecutó, verificó y pusheó; ver `git log main` si hace falta ese
-> historial). Esta es una foto a mitad de tarea del rediseño visual, se
-> irá actualizando fase a fase mientras avanza — no es un documento
-> permanente como SPEC.md/DECISIONS.md.
+> historial). Las 13 fases de `plan-rediseno-dale-cancha.md` están
+> commiteadas en `rediseno-organic`, pero **sin push a `main` todavía** —
+> falta el chequeo visual real (bloqueado en este sandbox, ver abajo) y
+> la decisión del usuario sobre el merge. No es un documento permanente
+> como SPEC.md/DECISIONS.md.
 
 ## Qué se está haciendo
 
@@ -30,7 +32,7 @@ quiera.
 ese momento — ninguna fase de este trabajo se pusheó todavía, todo vive
 en commits locales de `rediseno-organic`.
 
-## Estado de las fases (2026-09-16, sesión en curso)
+## Estado actual
 
 - [x] **Fase 0** — decisiones D1-D13 resueltas a su default, documentadas
   en `DECISIONS.md`. Rama `rediseno-organic` creada. Commit `9f31424`.
@@ -68,18 +70,22 @@ en commits locales de `rediseno-organic`.
   "America/Costa_Rica"`) porque mostrar `expira_at`/`comprobante_subido_at`
   con `new Date(...).toISOString()` da la hora en UTC, no en CR — mismo
   bug que D11. Commit `82e6ee6`.
-- [ ] **Fase 9** — Mis reservas (tabs Activas/Pasadas, línea "qué sigue"
-  en la fila, `hora_fin` como lectura nueva). **Próximo paso.**
-- [ ] **Fase 10** — Panel del admin (`lib/admin/panel.ts` nuevo, banner,
-  4 StatCards, próximos partidos).
-- [ ] **Fase 11** — Cola de validaciones (filtro por cancha, expandir
-  primer ítem).
-- [ ] **Fase 12** — Estadísticas (heatmap D10, gráfico de ingresos).
-- [ ] **Fase 13** — Barrido final: pantallas sin diseñar heredan tokens,
+- [x] **Fase 9** — Mis reservas (tabs Activas/Pasadas, línea "qué sigue"
+  en la fila, `hora_fin` como lectura nueva). Commit `763232f`.
+- [x] **Fase 10** — Panel del admin (`lib/admin/panel.ts` nuevo, banner,
+  4 StatCards, próximos partidos). Commit `1e55123`.
+- [x] **Fase 11** — Cola de validaciones (filtro por cancha, expandir
+  primer ítem). Commit `510ca70`.
+- [x] **Fase 12** — Estadísticas (heatmap D10, gráfico de ingresos).
+  Commit `49ee223`.
+- [x] **Fase 13** — Barrido final: pantallas sin diseñar heredan tokens,
   greps de auditoría (hex sueltos, paleta Tailwind default, texto <16px,
   `toLocaleDateString` residual, `render={<Link` sin `nativeButton`,
-  `washed` en comprobantes), cierre de `DECISIONS.md`/este handoff,
-  preguntar al usuario sobre merge a `main` y push.
+  `washed` en comprobantes — todas en 0 resultados o justificadas),
+  cierre de `DECISIONS.md`/este handoff. **Lo único que falta de la
+  Fase 13**: recorrer la matriz de verificación visual de la sección 8
+  del plan (bloqueada en este sandbox) y preguntarle al usuario sobre
+  el merge a `main` y el push — ver "Próximos pasos" abajo.
 
 El detalle de qué cambió en cada fase (archivos, decisiones de
 implementación no explícitas en el plan) vive en los mensajes de commit
@@ -153,12 +159,23 @@ por default es para macOS ARM64). No se persistió en `package.json`/
   sigue siendo válido pero ya no está en este archivo; recuperarlo de
   `git log -p -- HANDOFF.md` si hace falta.
 
-## Próximo paso concreto
+## Próximos pasos
 
-Fase 9 — Mis reservas: `app/futbolero/reservas/page.tsx`,
-`ListaReservas.tsx`, `loading.tsx`. Agregar `hora_fin` al select de
-`slots` (lectura nueva), tabs en píldora Activas/Pasadas, filas con
-`EstadoReservaBadge` + línea "qué sigue" (14px, solo en
-`pendiente_validacion` y `creada`), estados vacíos sin cambios de copy,
-skeleton nuevo. Ver el texto completo de la fase en
-`plan-rediseno-dale-cancha.md` (sección "Fase 9").
+1. **Chequeo visual real**, en la Mac del usuario, fuera de este sandbox:
+   `npm run build` (o `npm run dev`) y recorrer la matriz de la sección 8
+   de `plan-rediseno-dale-cancha.md` — las 14 rutas a 390×844 y 1280×832,
+   más la fila de accesibilidad transversal (tab, foco visible, zoom
+   200%, VoiceOver en el estado de la reserva, `prefers-reduced-motion`,
+   44px mínimo, texto interactivo ≥16px). Ninguna de estas casillas se
+   marcó en el plan porque no se pudieron verificar visualmente acá.
+2. **Preguntarle al usuario** si hace merge de `rediseno-organic` a
+   `main` y si empuja — no se hizo ni se preguntó todavía en esta
+   sesión. `main` sigue como estaba antes de este rediseño.
+3. Si el merge se pide: revisar que no haya conflictos con cambios que
+   hayan entrado a `main` en paralelo (no debería, pero no se verificó
+   en esta sesión), mergear, y recién ahí `git push` — nunca antes de
+   que el usuario lo pida explícitamente en ese momento.
+4. Los riesgos R1-R6 de la sección 6 del plan (ver también el cierre en
+   DECISIONS.md del 2026-09-16) siguen sin resolver — ninguno se tocó en
+   este rediseño a propósito, son decisiones de producto/negocio
+   separadas, no de este trabajo visual.

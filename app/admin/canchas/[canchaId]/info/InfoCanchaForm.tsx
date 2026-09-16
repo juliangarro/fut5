@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Aviso } from "@/components/shared/Aviso";
 
 export function InfoCanchaForm({
   canchaId,
@@ -29,17 +30,11 @@ export function InfoCanchaForm({
     <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="nombre">Nombre</Label>
-        <Input id="nombre" name="nombre" required defaultValue={cancha.nombre} className="h-11" />
+        <Input id="nombre" name="nombre" required defaultValue={cancha.nombre} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="numero_sinpe">Número SINPE Móvil</Label>
-        <Input
-          id="numero_sinpe"
-          name="numero_sinpe"
-          required
-          defaultValue={cancha.numero_sinpe}
-          className="h-11"
-        />
+        <Input id="numero_sinpe" name="numero_sinpe" required defaultValue={cancha.numero_sinpe} />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="descripcion">Descripción</Label>
@@ -56,12 +51,12 @@ export function InfoCanchaForm({
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">Amenidades</legend>
+        <legend className="mb-1 text-[15px] font-semibold">Amenidades</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {AMENIDADES_DISPONIBLES.map((a) => (
             <Label
               key={a.key}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm has-data-checked:border-primary has-data-checked:bg-primary/5"
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-fila border border-border px-3 py-2 text-[15px] has-data-checked:border-primary has-data-checked:bg-accent"
             >
               <Checkbox name="amenidades" value={a.key} defaultChecked={cancha.amenidades.includes(a.key)} />
               {a.label}
@@ -70,10 +65,10 @@ export function InfoCanchaForm({
         </div>
       </fieldset>
 
-      {state && "error" in state && <p className="text-sm text-danger">{state.error}</p>}
-      {state && "exito" in state && <p className="text-sm text-success">Cambios guardados.</p>}
+      {state && "error" in state && <Aviso tono="error">{state.error}</Aviso>}
+      {state && "exito" in state && <Aviso tono="exito">Cambios guardados.</Aviso>}
 
-      <Button type="submit" size="lg" className="h-11" disabled={pending}>
+      <Button type="submit" size="lg" disabled={pending}>
         {pending ? "Guardando…" : "Guardar cambios"}
       </Button>
     </form>

@@ -649,15 +649,15 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 ### Fase 13 — Pantallas sin diseño, barrido y documentación
 **Commit:** `feat(ui): barrido final del rediseño + docs`
 
-- [ ] Heredan tokens y reciben ajuste de layout (contenedor, títulos 700 y `Aviso`):
+- [x] Heredan tokens y reciben ajuste de layout (contenedor, títulos 700 y `Aviso`):
   - `app/admin/canchas/nueva/page.tsx`
   - `app/admin/canchas/[canchaId]/info/page.tsx` + `InfoCanchaForm.tsx` + `components/admin/FotosCanchaUploader.tsx`
   - `app/admin/canchas/[canchaId]/slots/nueva/page.tsx` + `components/CrearSlotForm.tsx`
   - `components/admin/SelectorCancha.tsx`
   - `app/auth/set-password/page.tsx` (reemplazar `zinc`, `black`, `white` y `dark:` por los componentes `Input` y `Button`)
-- [ ] Restilizar `EmptyState` (`rounded-card`, borde punteado `border-border`, ícono `text-neutral-700`, o `text-sage-700` si es positivo), `ConfirmDialog` y `RatingStars` (`fill-brand`).
-- [ ] Reemplazar todos los montos y fechas por `lib/formato.ts` (D9).
-- [ ] **Auditorías con grep.** Cada una debe dar 0 resultados, o cada resultado debe estar justificado en el commit:
+- [x] Restilizar `EmptyState` (`rounded-card`, borde punteado `border-border`, ícono `text-neutral-700`, o `text-sage-700` si es positivo), `ConfirmDialog` y `RatingStars` (`fill-brand`).
+- [x] Reemplazar todos los montos y fechas por `lib/formato.ts` (D9).
+- [x] **Auditorías con grep.** Cada una debe dar 0 resultados, o cada resultado debe estar justificado en el commit:
   ```bash
   grep -rnE "#[0-9a-fA-F]{3,8}\b" app components --include=*.tsx | grep -v "themeColor"
   grep -rnE "\b(zinc|slate|gray|green|red|amber|emerald)-[0-9]" app components --include=*.tsx
@@ -668,7 +668,7 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
   grep -rn "render={<Link" app components --include=*.tsx | grep -v nativeButton
   grep -rnE "washed" app components --include=*.tsx                         # ninguno sobre comprobantes
   ```
-- [ ] Docs:
+- [x] Docs:
   - `DECISIONS.md`: entrada de cierre con las definiciones de las métricas del panel, D1–D13 y lo que quedó fuera.
   - `HANDOFF.md`: "Estado actual" y "Próximos pasos".
   - `plan-ui-ux-canchas-fut5-cr.md`: el aviso de la Fase 0 ya está.
