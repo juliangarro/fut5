@@ -592,11 +592,11 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 **No se tocan:** las rutas `confirmar` y `rechazar`, la firma de 5 minutos ni el orden por `comprobante_subido_at`.
 **Commit:** `feat(ui): cola de validaciones con ítem expandido y filtros por cancha`
 
-- [ ] Encabezado: "Comprobantes por validar" en 700/32px y la bajada del README.
+- [x] Encabezado: "Comprobantes por validar" en 700/32px y la bajada del README.
   - A la derecha, un filtro por cancha en píldora (`bg-card rounded-full p-[5px]`, opciones de 40px, activa en `bg-primary`): "Todas" + los nombres cortos.
   - Es estado de cliente y solo aparece si hay más de una cancha.
-- [ ] `ItemCola` suma `canchaId` para poder filtrar (el dato ya se lee).
-- [ ] **Ítem expandido** (el primero de la lista filtrada, abierto por defecto): `bg-card rounded-panel border border-terracota-300 px-[22px] py-5 gap-[22px]`, en fila en desktop y apilado en mobile.
+- [x] `ItemCola` suma `canchaId` para poder filtrar (el dato ya se lee).
+- [x] **Ítem expandido** (el primero de la lista filtrada, abierto por defecto): `bg-card rounded-panel border border-terracota-300 px-[22px] py-5 gap-[22px]`, en fila en desktop y apilado en mobile.
   - Comprobante de 168×214 `rounded-[22px] object-cover` **sin washed**. Tocarlo lo abre a tamaño completo en un `Dialog`: es crucial para leer el monto.
   - Nombre en 700/20px + `Badge variant="neutral"` con la cancha.
   - "teléfono · hoy 18:00–19:00" en 15px.
@@ -607,13 +607,13 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
     - `Button variant="success" size="lg"` "Confirmar reserva";
     - `Button variant="outline" size="lg"` "Rechazar con motivo", con `border-terracota-400 text-terracota-800`.
   - El `ConfirmDialog` de rechazo usa `components/ui/textarea` con un `<Label>` visible "Motivo del rechazo". El motivo sigue siendo obligatorio.
-- [ ] **Ítems colapsados:** fila `bg-card rounded-panel px-[22px] py-[18px] gap-5`.
+- [x] **Ítems colapsados:** fila `bg-card rounded-panel px-[22px] py-[18px] gap-5`.
   - Miniatura de 74×74 `rounded-slot`.
   - Nombre en 700/18px + tag de cancha.
   - Resumen en 15px: "hoy 19:00–20:00 · ₡14.000 · vence en 24 min".
   - Botón `ghost` "Abrir" (`aria-expanded`), que expande ese ítem.
-- [ ] Vacío: `EmptyState tono="positivo"`, "No hay comprobantes pendientes" / "Estás al día.", con un estilo de fondo `bg-sage-100`.
-- [ ] `loading.tsx`: la misma forma (un ítem grande y dos filas).
+- [x] Vacío: `EmptyState tono="positivo"`, "No hay comprobantes pendientes" / "Estás al día.", con un estilo de fondo `bg-sage-100`.
+- [x] `loading.tsx`: la misma forma (un ítem grande y dos filas).
 
 ### Fase 12 — Estadísticas
 **Archivos:** `app/admin/insights/page.tsx`, `components/admin/OcupacionHeatmap.tsx`, `components/admin/IngresosTrend.tsx`
