@@ -20,7 +20,7 @@ export default function MasAdminPage() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="flex h-14 items-center justify-between gap-3 border-b border-border px-4 text-[15px] font-medium last:border-b-0"
+                className="flex h-14 items-center justify-between gap-3 border-b border-border px-4 text-[16px] font-medium last:border-b-0"
               >
                 <span className="flex items-center gap-3">
                   <Icono className="size-5 text-neutral-700" />

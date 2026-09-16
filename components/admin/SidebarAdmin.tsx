@@ -42,7 +42,7 @@ export function SidebarAdmin({
               href={item.href}
               aria-current={activo ? "page" : undefined}
               className={cn(
-                "flex h-[46px] items-center justify-between gap-2.5 rounded-full px-4 text-[15px]",
+                "flex h-[46px] items-center justify-between gap-2.5 rounded-full px-4 text-[16px]",
                 activo ? "bg-primary font-bold text-primary-foreground" : "text-foreground hover:bg-accent"
               )}
             >

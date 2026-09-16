@@ -92,7 +92,7 @@ function TarjetaRol({
         className="size-[22px] shrink-0 border-neutral-600 data-checked:border-brand data-checked:bg-brand"
       />
       <span>
-        <span className="block text-[15px] font-bold text-foreground">{titulo}</span>
+        <span className="block text-[16px] font-bold text-foreground">{titulo}</span>
         <span className="block text-[14px] text-neutral-700">{descripcion}</span>
       </span>
     </Label>

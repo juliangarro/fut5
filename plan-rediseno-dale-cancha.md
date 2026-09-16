@@ -703,28 +703,35 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 
 | Ruta | 390 | 1280 | Qué verificar |
 |---|---|---|---|
-| `/` | ☐ | ☐ | Marca, ilustración sage, dos botones de 54px |
-| `/login`, `/login?modo=crear` | ☐ | ☐ | Tarjetas de rol accesibles con teclado (flechas), errores con `Aviso`, input de 16px |
-| `/futbolero/canchas` | ☐ | ☐ | Cabecera arena, buscador, chips con `aria-pressed`, orden, rejilla 2 / 3–4, precio "desde", vacíos, skeleton |
-| `/futbolero/canchas/[id]` | ☐ | ☐ | Portada con contador, lámina, tags "+N", días, franjas, estados de pastilla, barra solo con selección, **horarios de esta noche después de las 18:00** (D11) |
-| `…/reservar/[slotId]` | ☐ | ☐ | Paso 1, copiar, "Ya pagué" crea la reserva, horario tomado, Esc cierra |
-| `…/reservar/[slotId]/comprobante` | ☐ | ☐ | Paso 2: adjunto, preparando, revisión, enviando, error + reintento, sin reserva |
-| `/futbolero/reservas` | ☐ | ☐ | Tabs en píldora, filas con badge y "qué sigue", vacíos |
-| `/futbolero/reservas/[id]`, en los 6 estados | ☐ | ☐ | Cabecera tintada, timeline (3 estados), cards, cancelar solo en `creada`, toast realtime |
-| `/futbolero/perfil` | ☐ | ☐ | Datos + Salir |
-| `/admin` | ☐ | ☐ | Sidebar/barra, contador, banner (con y sin pendientes, vencido), 4 métricas, paneles |
-| `/admin/validaciones` | ☐ | ☐ | Filtro, expandido y colapsados, comprobante a tamaño completo, confirmar, rechazar con motivo, vacío |
-| `/admin/insights?periodo=7\|30\|90` | ☐ | ☐ | Selector, métricas, heatmap + leyenda + línea calculada, barras, recurrentes, CSV |
-| `/admin/canchas`, `/admin/horarios`, `/admin/mas` | ☐ | ☐ | Navegación D6 |
-| `/admin/canchas/nueva`, `…/info`, `…/slots/nueva`, `/auth/set-password` | ☐ | ☐ | Heredan tokens, sin colores viejos |
+| `/` | ☑ | ☑ | Marca, ilustración sage, dos botones de 54px confirmados por JS (`getBoundingClientRect`) |
+| `/login`, `/login?modo=crear` | ☑ | ☑ | Tarjetas de rol con teclado OK (`ArrowDown`/`ArrowRight` mueven el radio activo), `Aviso` verificado con `?error=link_invalido`, input a 16px confirmado |
+| `/futbolero/canchas` | ☑ | ☑ | Cabecera, buscador, `aria-pressed` en los 4 chips confirmado por JS, orden, rejilla, precio "desde" OK. **Bug encontrado y arreglado**: a 1280px la cabecera "Dale Cancha" + avatar se duplicaba (una vez en el `NavBar`, otra en `ListaCanchas.tsx` sin `md:hidden`) — ver `app/futbolero/canchas/ListaCanchas.tsx`. Skeleton visto de pasada, no inspeccionado a fondo |
+| `/futbolero/canchas/[id]` | ☑ | ☑ | Portada con contador (1/3), tags, días, franjas, pastillas "Ocupado"/disponible, barra inferior solo con selección — todo OK. No se armó el caso "esta noche después de las 18:00" (D11) por falta de datos de prueba en esa franja horaria exacta |
+| `…/reservar/[slotId]` | ☑ | ☑ | Hoja de pago, copiar visible, "Ya pagué" crea la reserva real en Supabase (confirmado por query directa a la tabla), horario pasa a `pendiente_validacion`. No se probó "horario tomado" ni Esc explícitamente |
+| `…/reservar/[slotId]/comprobante` | ☑ | — | Estado "adjunto" visible. Los demás estados (preparando/revisión/enviando/error) requieren subir un archivo real, que esta herramienta de navegador no puede automatizar — no verificado |
+| `/futbolero/reservas` | ☑ | ☑ | Tabs en píldora, badges "Esperando pago"/"Confirmada", línea "qué sigue" OK |
+| `/futbolero/reservas/[id]`, en los 6 estados | Parcial | Parcial | Verificados `creada` (cabecera oscura, cancelar visible) y `confirmada` (cabecera verde, comprobante con hora). No había datos de prueba para `pendiente_validacion`/`rechazada`/`cancelada`/`vencida` |
+| `/futbolero/perfil` | ☑ | — | Datos + Salir OK |
+| `/admin` | ☑ | ☑ | Sidebar (desktop) y barra (mobile) con ícono ya arreglado, banner "Estás al día", 4 métricas OK. No se armó el caso "con pendientes"/"vencido" del banner por falta de datos |
+| `/admin/validaciones` | ☑ | — | Solo el estado vacío tenía datos de prueba; confirmar/rechazar/expandido no verificados por falta de comprobantes pendientes reales |
+| `/admin/insights?periodo=7\|30\|90` | ☑ | ☑ | Selector de período, 4 métricas, estados vacíos de heatmap/ingresos/recurrentes OK. Sin reservas confirmadas en el rango no se pudo ver el heatmap ni el CSV con datos reales |
+| `/admin/canchas`, `/admin/horarios`, `/admin/mas` | ☑ | ☑ | Navegación D6 OK en las tres |
+| `/admin/canchas/nueva`, `…/info`, `…/slots/nueva`, `/auth/set-password` | ☑ | — | Heredan tokens, sin colores viejos, formularios OK |
+
+**Bugs encontrados en esta sesión de QA (2026-09-15/16, Mac del usuario) y ya arreglados en la rama:**
+1. `app/futbolero/layout.tsx` y `app/admin/layout.tsx` pasaban componentes de ícono de `lucide-react` (funciones) como prop desde un Server Component a `BarraInferior` (Client Component) — React 19 lo rechaza (`Only plain objects can be passed...`), rompía con 500 **todas** las rutas de `/futbolero/*` y `/admin/*`. Arreglado: `BarraInferior` ahora resuelve el ícono por string key.
+2. `app/futbolero/canchas/ListaCanchas.tsx` — cabecera móvil (marca + avatar) sin `md:hidden`, se duplicaba con el `NavBar` a 1280px. Arreglado.
+
+**Hallazgo de accesibilidad reportado y arreglado (a pedido del usuario):**
+- Varios controles interactivos usaban `text-[15px]` en vez de ≥16px: `components/ui/button.tsx` (variante `sm`), `components/ui/tabs.tsx` (tabs variante `default`), `components/shared/ChipFiltro.tsx`, `components/NavBar.tsx`, `components/admin/SidebarAdmin.tsx`, más el trigger de orden en `ListaCanchas.tsx`, el `<summary>` de política de cancelación, el label de amenidades en `InfoCanchaForm.tsx`, las filas de `/admin/mas`, y el título de las tarjetas de rol en `LoginForm.tsx`. Todos subidos a 16px, alturas fijas (`h-11`, `h-[42px]`, etc.) no se tocaron y no rompen — verificado con `tsc`/`lint`/captura visual en 390 y 1280. No se tocaron textos secundarios/metadata (precio, rating, fecha, descripciones) que ya caían en la excepción de "kickers/metadata", ni los títulos dentro de `CanchaCard`/listas de admin (fuera del alcance reportado, para no arriesgar una re-maquetación completa de tarjetas sin verificación visual exhaustiva).
 
 **Accesibilidad transversal:**
-- ☐ Tab completo en cada ruta, con foco visible.
-- ☐ Zoom al 200% sin scroll horizontal.
-- ☐ VoiceOver lee el estado de la reserva como texto.
-- ☐ `prefers-reduced-motion` desactiva la animación de la hoja.
-- ☐ Ningún control mide menos de 44px.
-- ☐ El texto interactivo mide 16px o más.
+- ☑ Tab completo con foco visible confirmado por JS (`:focus-visible` → `outline: solid 2px, offset 2px`) en `/futbolero/canchas`.
+- Zoom al 200% — inconcluso: la emulación vía `document.documentElement.style.zoom` mostró ~75px de overflow horizontal a 390px, pero la mayor parte viene de la fila de chips con scroll horizontal intencional (`overflow-x-auto`), un patrón común y aceptable (análogo a una barra de tabs). No es una medición confiable de zoom real de navegador — recomendado reverificar con Cmd+/Cmd- en Safari/Chrome real.
+- VoiceOver — no verificable desde este entorno (sin lector de pantalla real disponible en el navegador de la herramienta).
+- ☑ `prefers-reduced-motion` — confirmado por código: `HojaInferior.tsx:44` tiene `motion-reduce:animate-none` en el panel que desliza. El backdrop (`:39`) solo tiene fade, no slide, así que no hace falta la misma clase ahí.
+- ☑ Ningún control por debajo de 44px — escaneado por JS en `/futbolero/canchas`, sin violaciones reales (el único elemento <44px es un radio nativo `sr-only` de 1×1px, no es el objetivo táctil visible).
+- ☑ El texto interactivo mide 16px o más — arreglado en esta sesión, ver hallazgo arriba.
 
 ---
 

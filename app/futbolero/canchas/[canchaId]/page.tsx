@@ -70,7 +70,7 @@ export default async function CanchaDetailPage({
           </div>
           {cancha.politica_cancelacion && (
             <details className="mt-1">
-              <summary className="cursor-pointer text-[15px] font-semibold text-terracota-700">
+              <summary className="cursor-pointer text-[16px] font-semibold text-terracota-700">
                 Ver política de cancelación
               </summary>
               <div className="mt-2 rounded-slot bg-neutral-100 px-4 py-3 text-[14px] text-neutral-800">

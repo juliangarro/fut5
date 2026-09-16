@@ -56,7 +56,7 @@ export function InfoCanchaForm({
           {AMENIDADES_DISPONIBLES.map((a) => (
             <Label
               key={a.key}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-fila border border-border px-3 py-2 text-[15px] has-data-checked:border-primary has-data-checked:bg-accent"
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-fila border border-border px-3 py-2 text-[16px] has-data-checked:border-primary has-data-checked:bg-accent"
             >
               <Checkbox name="amenidades" value={a.key} defaultChecked={cancha.amenidades.includes(a.key)} />
               {a.label}

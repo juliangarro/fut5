@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NavBar } from "@/components/NavBar";
 import { BarraInferior } from "@/components/BarraInferior";
-import { Search, Calendar, User } from "lucide-react";
 
 const LINKS = [
   { href: "/futbolero/canchas", label: "Buscar" },
@@ -10,9 +9,9 @@ const LINKS = [
 ];
 
 const ITEMS_BARRA = [
-  { href: "/futbolero/canchas", label: "Buscar", icono: Search },
-  { href: "/futbolero/reservas", label: "Mis reservas", icono: Calendar },
-  { href: "/futbolero/perfil", label: "Perfil", icono: User },
+  { href: "/futbolero/canchas", label: "Buscar", icono: "search" as const },
+  { href: "/futbolero/reservas", label: "Mis reservas", icono: "calendar" as const },
+  { href: "/futbolero/perfil", label: "Perfil", icono: "user" as const },
 ];
 
 export default async function FutboleroLayout({ children }: { children: React.ReactNode }) {

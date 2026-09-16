@@ -66,8 +66,8 @@ export function ListaCanchas({ canchas, nombre }: { canchas: Cancha[]; nombre: s
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3.5 rounded-b-header bg-card px-5 pt-[52px] pb-4">
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3.5 rounded-b-header bg-card px-5 pt-[52px] pb-4 md:rounded-none md:bg-transparent md:px-0 md:pt-6 md:pb-0">
+        <div className="flex items-center justify-between md:hidden">
           <span className="text-[19px] font-bold">Dale Cancha</span>
           <Avatar nombre={nombre} />
         </div>
@@ -104,7 +104,7 @@ export function ListaCanchas({ canchas, nombre }: { canchas: Cancha[]; nombre: s
           {filtradas.length} {filtradas.length === 1 ? "cancha" : "canchas"}
         </span>
         <Select value={orden} onValueChange={(v) => setOrden(v as "rating" | "precio")}>
-          <SelectTrigger className="h-auto gap-1 border-none bg-transparent p-0 text-[15px] font-bold text-terracota-700 hover:bg-transparent">
+          <SelectTrigger className="h-auto gap-1 border-none bg-transparent p-0 text-[16px] font-bold text-terracota-700 hover:bg-transparent">
             <SelectValue>{(v: string) => (v === "precio" ? "Menor precio" : "Mejor calificadas")}</SelectValue>
             <ChevronDown className="size-4" />
           </SelectTrigger>

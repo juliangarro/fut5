@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { contarPendientes } from "@/lib/admin/contarPendientes";
 import { SidebarAdmin } from "@/components/admin/SidebarAdmin";
 import { BarraInferior } from "@/components/BarraInferior";
-import { LayoutGrid, ClipboardCheck, Calendar, Ellipsis } from "lucide-react";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -26,10 +25,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const itemsBarra = [
-    { href: "/admin", label: "Panel", icono: LayoutGrid },
-    { href: "/admin/validaciones", label: "Validaciones", icono: ClipboardCheck, contador: pendientes },
-    { href: "/admin/horarios", label: "Horarios", icono: Calendar },
-    { href: "/admin/mas", label: "Más", icono: Ellipsis },
+    { href: "/admin", label: "Panel", icono: "layoutGrid" as const },
+    { href: "/admin/validaciones", label: "Validaciones", icono: "clipboardCheck" as const, contador: pendientes },
+    { href: "/admin/horarios", label: "Horarios", icono: "calendar" as const },
+    { href: "/admin/mas", label: "Más", icono: "ellipsis" as const },
   ];
 
   return (

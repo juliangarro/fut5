@@ -30,7 +30,7 @@ export function NavBar({
               href={link.href}
               aria-current={activo ? "page" : undefined}
               className={cn(
-                "flex h-11 items-center rounded-full px-4 text-[15px] font-medium",
+                "flex h-11 items-center rounded-full px-4 text-[16px] font-medium",
                 activo ? "bg-primary font-bold text-primary-foreground" : "text-neutral-800 hover:bg-accent"
               )}
             >

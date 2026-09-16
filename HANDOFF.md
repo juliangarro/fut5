@@ -5,9 +5,23 @@
 > se ejecutó, verificó y pusheó; ver `git log main` si hace falta ese
 > historial). Las 13 fases de `plan-rediseno-dale-cancha.md` están
 > commiteadas en `rediseno-organic`, pero **sin push a `main` todavía** —
-> falta el chequeo visual real (bloqueado en este sandbox, ver abajo) y
-> la decisión del usuario sobre el merge. No es un documento permanente
-> como SPEC.md/DECISIONS.md.
+> falta la decisión del usuario sobre el merge. No es un documento
+> permanente como SPEC.md/DECISIONS.md.
+>
+> **Actualización 2026-09-15/16, sesión de QA visual en la Mac del usuario**
+> (fuera del sandbox): se corrió `npm run build` y `npm run dev` reales,
+> y se recorrió la matriz de la sección 8 del plan (ver esa sección para
+> el detalle ruta por ruta). Se encontraron y arreglaron 2 bugs reales:
+> (1) `app/futbolero/layout.tsx`/`app/admin/layout.tsx` pasaban íconos de
+> `lucide-react` como prop de Server a Client Component, lo que tiraba
+> 500 en **todas** las rutas de `/futbolero/*` y `/admin/*` — `BarraInferior`
+> ahora resuelve el ícono por string key; (2) a 1280px la cabecera "Dale
+> Cancha" se duplicaba en `/futbolero/canchas` (`ListaCanchas.tsx` sin
+> `md:hidden`). También se arregló, a pedido explícito del usuario, el
+> hallazgo de texto interactivo a 15px en vez de ≥16px (sistémico en
+> `button.tsx`/`tabs.tsx`/`ChipFiltro.tsx`/`NavBar.tsx`/`SidebarAdmin.tsx`
+> y algunos labels puntuales) — ver sección 8 del plan para el detalle
+> completo y el alcance exacto del arreglo.
 
 ## Qué se está haciendo
 
@@ -161,16 +175,20 @@ por default es para macOS ARM64). No se persistió en `package.json`/
 
 ## Próximos pasos
 
-1. **Chequeo visual real**, en la Mac del usuario, fuera de este sandbox:
-   `npm run build` (o `npm run dev`) y recorrer la matriz de la sección 8
-   de `plan-rediseno-dale-cancha.md` — las 14 rutas a 390×844 y 1280×832,
-   más la fila de accesibilidad transversal (tab, foco visible, zoom
-   200%, VoiceOver en el estado de la reserva, `prefers-reduced-motion`,
-   44px mínimo, texto interactivo ≥16px). Ninguna de estas casillas se
-   marcó en el plan porque no se pudieron verificar visualmente acá.
+1. ~~Chequeo visual real en la Mac del usuario~~ — hecho el 2026-09-15/16,
+   ver la actualización arriba y la sección 8 del plan para el detalle.
+   Quedan sin verificar por falta de datos de prueba: los 4 estados de
+   comprobante que requieren subir un archivo real (herramienta de
+   navegador no puede automatizar file picker), los estados
+   `pendiente_validacion`/`rechazada`/`cancelada`/`vencida` de una
+   reserva, el banner del admin "con pendientes"/"vencido", y el heatmap
+   de insights con datos reales (no hay reservas confirmadas suficientes
+   en el rango). VoiceOver tampoco es verificable desde ese entorno.
 2. **Preguntarle al usuario** si hace merge de `rediseno-organic` a
    `main` y si empuja — no se hizo ni se preguntó todavía en esta
-   sesión. `main` sigue como estaba antes de este rediseño.
+   sesión. `main` sigue como estaba antes de este rediseño. También
+   preguntar si quiere arreglar el hallazgo de texto interactivo a 15px
+   (ver sección 8) antes o después del merge, dado que es sistémico.
 3. Si el merge se pide: revisar que no haya conflictos con cambios que
    hayan entrado a `main` en paralelo (no debería, pero no se verificó
    en esta sesión), mergear, y recién ahí `git push` — nunca antes de

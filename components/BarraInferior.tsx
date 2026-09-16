@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
+import { Search, Calendar, User, LayoutGrid, ClipboardCheck, Ellipsis } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const ICONOS = {
+  search: Search,
+  calendar: Calendar,
+  user: User,
+  layoutGrid: LayoutGrid,
+  clipboardCheck: ClipboardCheck,
+  ellipsis: Ellipsis,
+} as const;
 
 export type ItemBarraInferior = {
   href: string;
   label: string;
-  icono: LucideIcon;
+  icono: keyof typeof ICONOS;
   contador?: number;
 };
 
@@ -35,7 +44,7 @@ export function BarraInferior({
     >
       {items.map((item) => {
         const activo = item.href === pathname;
-        const Icono = item.icono;
+        const Icono = ICONOS[item.icono];
         return (
           <Link
             key={item.href}
