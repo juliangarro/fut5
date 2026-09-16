@@ -7,6 +7,7 @@ import { Aviso } from "@/components/shared/Aviso";
 import { comprimirImagen } from "@/lib/comprimirImagen";
 
 const REINTENTOS_MAXIMOS = 3;
+const TIMEOUT_MS = 20_000;
 
 async function subirConReintentos(
   reservaId: string,
@@ -16,17 +17,23 @@ async function subirConReintentos(
   formData.append("file", file);
 
   for (let intento = 1; intento <= REINTENTOS_MAXIMOS; intento++) {
+    const timeout = AbortSignal.timeout(TIMEOUT_MS);
     try {
       const res = await fetch(`/api/reservas/${reservaId}/comprobante`, {
         method: "POST",
         body: formData,
+        signal: timeout,
       });
-      const json = await res.json();
       if (res.ok) return { ok: true };
-      if (res.status < 500) return { ok: false, error: json.error ?? "Error al subir el comprobante." };
+      // Cuerpo no-JSON (ej. página de error de un proxy) no debe leerse como
+      // "sin conexión": informamos según el status en vez de reintentar a ciegas.
+      const json = await res.json().catch(() => null);
+      if (res.status < 500) {
+        return { ok: false, error: json?.error ?? "Error al subir el comprobante." };
+      }
       // 5xx: reintentar (probable problema de conectividad, contexto real en Costa Rica — ver 7.5/10.9)
     } catch {
-      // fetch falló (sin conexión) — reintentar
+      // fetch falló o se colgó (sin conexión / timeout) — reintentar
     }
     if (intento < REINTENTOS_MAXIMOS) {
       await new Promise((r) => setTimeout(r, 1000 * intento));
@@ -50,9 +57,9 @@ export function ComprobanteUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [estado, setEstado] = useState<"idle" | "comprimiendo" | "listo" | "subiendo" | "error">(
-    "idle"
-  );
+  const [estado, setEstado] = useState<
+    "idle" | "comprimiendo" | "listo" | "subiendo" | "error" | "enviado"
+  >("idle");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,6 +87,11 @@ export function ComprobanteUploader({
       setError(resultado.error ?? "Error desconocido");
       return;
     }
+    // Feedback inmediato e independiente de quién use este componente: no
+    // depender solo de onExito (navega) ni del evento realtime del padre
+    // (puede tardar o no estar habilitado) para confirmarle al futbolero
+    // que la subida sí funcionó.
+    setEstado("enviado");
     onExito?.();
   }
 
@@ -114,6 +126,24 @@ export function ComprobanteUploader({
             <span className="block text-[14px] text-neutral-700">Foto o captura del SINPE</span>
           </span>
         </button>
+      </div>
+    );
+  }
+
+  if (estado === "enviado") {
+    return (
+      <div className="flex flex-col gap-4">
+        {previewUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewUrl}
+            alt="Comprobante de pago SINPE"
+            className="h-[300px] w-full rounded-card bg-card object-contain"
+          />
+        )}
+        <Aviso tono="exito">
+          Comprobante enviado. La cancha ya lo puede revisar.
+        </Aviso>
       </div>
     );
   }

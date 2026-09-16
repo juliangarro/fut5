@@ -100,8 +100,17 @@ export function ReservaEstado({
   }, []);
 
   async function confirmarCancelacion() {
-    await onCancelar(reserva.id);
-    setDialogoAbierto(false);
+    try {
+      await onCancelar(reserva.id);
+      setDialogoAbierto(false);
+    } catch (err) {
+      // La Server Action tira si el estado cambió mientras el diálogo estaba
+      // abierto (ej. ya se resolvió por otro lado) — sin este catch quedaba
+      // como promesa sin manejar y no se avisaba nada.
+      toast.error(err instanceof Error ? err.message : "No se pudo cancelar la reserva.");
+      setDialogoAbierto(false);
+      router.refresh();
+    }
   }
 
   const paso = pasoActual(reserva.estado);
