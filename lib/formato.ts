@@ -62,6 +62,20 @@ export function formatearHora(horaISO: string): string {
   return horaISO.slice(0, 5);
 }
 
+/**
+ * "18:00" a partir de un timestamp completo (`expira_at`, `comprobante_subido_at`),
+ * convertido a hora de Costa Rica. Nunca usar `new Date(...).toLocaleTimeString()`
+ * sin `timeZone` acá: el runtime del servidor no está en UTC-6, mismo bug que D11.
+ */
+export function formatearHoraDeTimestamp(timestamp: string): string {
+  return new Intl.DateTimeFormat("es-CR", {
+    timeZone: ZONA_CR,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(timestamp));
+}
+
 /** "18:00–19:00". */
 export function formatearRangoHoras(horaInicio: string, horaFin: string): string {
   return `${formatearHora(horaInicio)}–${formatearHora(horaFin)}`;
