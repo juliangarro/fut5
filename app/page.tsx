@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { CanchaIlustracion } from "@/components/CanchaIlustracion";
+import { Marca } from "@/components/shared/Marca";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -20,17 +21,35 @@ export default async function Home() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-8 px-6 py-12 text-center">
-      <CanchaIlustracion className="mx-auto h-auto w-full max-w-64 text-primary" />
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold text-balance">Dale Cancha</h1>
-        <p className="text-muted-foreground">
-          Reservá tu cancha y pagá por SINPE Móvil, sin vueltas.
+    <div className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-between px-[26px] pt-[52px] pb-[34px]">
+      <Marca />
+
+      <div className="flex flex-col items-center gap-5 text-center">
+        <div className="w-full overflow-hidden rounded-[32px] shadow-md">
+          <CanchaIlustracion className="h-auto w-full" />
+        </div>
+        <h1 className="text-[34px] font-bold tracking-[-0.025em] text-balance">
+          Reservá tu cancha de fut5
+        </h1>
+        <p className="text-[17px] text-neutral-800">
+          Elegí horario, pagá por SINPE Móvil y seguí el estado de tu reserva en vivo.
         </p>
       </div>
-      <Button size="lg" className="h-11 px-6" nativeButton={false} render={<Link href="/login" />}>
-        Entrar
-      </Button>
+
+      <div className="flex flex-col gap-3">
+        <Button size="lg" className="w-full" nativeButton={false} render={<Link href="/login" />}>
+          Entrar
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full"
+          nativeButton={false}
+          render={<Link href="/login?modo=crear" />}
+        >
+          Crear cuenta
+        </Button>
+      </div>
     </div>
   );
 }
