@@ -6,8 +6,11 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 // Usa el service role porque ningún usuario autenticado puede transicionar
 // el estado de una reserva ajena — esta es una operación de sistema.
 export async function GET(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
   const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Fallar cerrado si la env var no está seteada, en vez de comparar contra
+  // el literal "Bearer undefined" (que un caller podría mandar a propósito).
+  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 

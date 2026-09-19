@@ -1,0 +1,26 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
+
+// Invocado por Vercel Cron (ver vercel.json) para mover `suscripciones` y
+// `addons_suscripcion` vencidos (activa -> en_gracia -> vencida). Ver
+// plan-monetizacion-admin.md sección 6.3. Usa el service role porque
+// ningún usuario autenticado puede transicionar el estado de una
+// suscripción ajena — esta es una operación de sistema.
+export async function GET(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
+  const auth = request.headers.get("authorization");
+  // Fallar cerrado si la env var no está seteada, en vez de comparar contra
+  // el literal "Bearer undefined" (que un caller podría mandar a propósito).
+  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error } = await supabase.rpc("vencer_suscripciones_y_addons");
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

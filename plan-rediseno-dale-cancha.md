@@ -687,6 +687,7 @@ Componentes compartidos **nuevos** (en `components/shared/`), para no duplicar m
 | R4 | Alta (conocida) | Login sin verificar la identidad (DECISIONS.md) | La piel nueva lo hace ver "más terminado" de lo que es | Reactivar la autenticación real antes de operar con usuarios reales |
 | R5 | Media | No hay tests ni CI. Toda la verificación es manual | Un rediseño de 30+ archivos tiene mucha superficie de regresión | Opcional: un smoke de Playwright con capturas a 390 y 1280 de las rutas de la sección 8 |
 | R6 | Media | Supabase tiene un solo ambiente (producción) | Las pruebas manuales crean reservas reales que ven los admins reales | Usar las cuentas de prueba de HANDOFF.md y cancelar las reservas de prueba (solo se puede en `creada`) |
+| R7 | Baja | **Comprobante se ve chico en el `Dialog` de la cola de validaciones** (reportado por el usuario 2026-09-18, `ColaValidacion.tsx`). El `DialogContent` está limitado a `max-w-lg` (~32rem) y la imagen usa `w-full object-contain` sin alto propio — en pantallas grandes queda con mucho margen alrededor y letra chica para leer el monto/número SINPE, justo el caso de uso principal de ese diálogo | Es la pantalla donde el admin valida el pago — si el comprobante es difícil de leer, aumenta el riesgo de confirmar/rechazar mal | Agrandar `max-w-lg` a algo como `max-w-2xl`/`max-w-3xl` y dar a la imagen un alto explícito (ej. `max-h-[80vh]`) para que ocupe la mayoría del viewport en desktop, no solo el ancho del diálogo |
 
 ---
 

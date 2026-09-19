@@ -46,8 +46,17 @@ export function IngresosTrend({ datos }: { datos: { etiqueta: string; monto: num
     <div className="overflow-x-auto">
       <svg
         viewBox={`0 0 ${ancho} ${ALTO + 24}`}
-        width="100%"
-        style={{ minWidth: ancho }}
+        // Tamaño intrínseco fijo en vez de width="100%": con width="100%" y
+        // sin height, el navegador deriva el alto del aspect ratio del
+        // viewBox y lo escala hasta llenar el ancho del contenedor — en un
+        // panel de admin ancho con pocas semanas de datos (`ancho` chico,
+        // ej. 192px para 5 barras) esto agranda todo (barras, texto de
+        // "155k", etiquetas "Sem N") varias veces, cortando valores arriba
+        // y solapando etiquetas. Con tamaño fijo, el gráfico se dibuja a su
+        // tamaño de diseño y `overflow-x-auto` del contenedor se encarga del
+        // desborde en pantallas angostas (móvil), no al revés.
+        width={ancho}
+        height={ALTO + 24}
         role="img"
         aria-label={`Ingresos confirmados por semana. Total del período: ${formatearColones(total)}.`}
       >

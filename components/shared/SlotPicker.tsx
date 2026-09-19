@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BarraAccionInferior } from "@/components/shared/BarraAccionInferior";
 import { formatearColones, formatearRangoHoras } from "@/lib/formato";
 import { franjaDeHora, ETIQUETA_FRANJA, type Franja } from "@/lib/franjas";
+import { sumarDiasCR } from "@/lib/fecha";
 import { cn } from "@/lib/utils";
 import type { EstadoSlot } from "@/lib/types/database";
 
@@ -22,9 +23,25 @@ export type SlotParaElegir = {
   estado: EstadoSlot;
 };
 
-function formatearDia(fecha: Date, hoy: Date) {
-  const diffDias = Math.round((fecha.getTime() - hoy.getTime()) / 86400000);
+// diferenciaDias/formatearDia trabajan sobre strings YYYY-MM-DD (nunca
+// Date/new Date() en hora local del navegador) -- ver bug UAT #1: "hoy"
+// tiene que venir del servidor (hoyCR(), CR-timezone-aware) para no
+// desincronizarse con la ventana de 7 días que se le pide a la DB. El
+// mediodía UTC como ancla evita que un borde de DST/zona horaria corra la
+// fecha un día para el lado equivocado al construir el Date solo para
+// mostrar el nombre del día/número.
+function diferenciaDias(desdeISO: string, hastaISO: string) {
+  const aUTC = (iso: string) => {
+    const [anio, mes, dia] = iso.split("-").map(Number);
+    return Date.UTC(anio, mes - 1, dia, 12);
+  };
+  return Math.round((aUTC(hastaISO) - aUTC(desdeISO)) / 86_400_000);
+}
+
+function formatearDia(iso: string, hoyISO: string) {
+  const fecha = new Date(`${iso}T12:00:00`);
   const numero = fecha.getDate();
+  const diffDias = diferenciaDias(hoyISO, iso);
   if (diffDias === 0) return { corto: "Hoy", numero };
   if (diffDias === 1) return { corto: "Mañana", numero };
   const corto = fecha.toLocaleDateString("es-CR", { weekday: "short" }).replace(".", "");
@@ -34,32 +51,28 @@ function formatearDia(fecha: Date, hoy: Date) {
 // Ver plan-rediseno-dale-cancha.md Fase 6: tabs de día (scroll horizontal) +
 // horarios agrupados en franjas mañana/tarde/noche. disponible =
 // seleccionable; retenido/reservado = "Ocupado"; bloqueado = "No disponible".
-// Seleccionar resalta el horario y muestra la barra "Continuar" — nunca
+// Seleccionar resalta el horario y muestra la barra "Continuar" -- nunca
 // navega automáticamente al tocar, para poder cambiar de selección.
 export function SlotPicker({
   canchaId,
   slots,
   franjaMasPedida,
+  hoyISO,
 }: {
   canchaId: string;
   slots: SlotParaElegir[];
   franjaMasPedida: Franja | null;
+  // "Hoy" calculado en el servidor (hoyCR(), ver lib/fecha.ts) -- nunca se
+  // recalcula acá con `new Date()`, que puede desincronizarse de la fecha
+  // real de Costa Rica según la hora/zona horaria del navegador del
+  // usuario (bug UAT #1).
+  hoyISO: string;
 }) {
-  const hoy = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
-
   const dias = useMemo(() => {
-    return Array.from({ length: DIAS_A_MOSTRAR }, (_, i) => {
-      const fecha = new Date(hoy);
-      fecha.setDate(fecha.getDate() + i);
-      return fecha;
-    });
-  }, [hoy]);
+    return Array.from({ length: DIAS_A_MOSTRAR }, (_, i) => sumarDiasCR(hoyISO, i));
+  }, [hoyISO]);
 
-  const [diaActivo, setDiaActivo] = useState(dias[0].toISOString().slice(0, 10));
+  const [diaActivo, setDiaActivo] = useState(dias[0]);
   const [slotSeleccionado, setSlotSeleccionado] = useState<SlotParaElegir | null>(null);
 
   const slotsPorDiaYFranja = useMemo(() => {
@@ -84,14 +97,13 @@ export function SlotPicker({
       <Tabs value={diaActivo} onValueChange={(v) => setDiaActivo(v as string)}>
         <div className="overflow-x-auto">
           <TabsList variant="line" className="w-max gap-2">
-            {dias.map((fecha) => {
-              const iso = fecha.toISOString().slice(0, 10);
-              const { corto, numero } = formatearDia(fecha, hoy);
+            {dias.map((iso) => {
+              const { corto, numero } = formatearDia(iso, hoyISO);
               return (
                 <TabsTrigger
                   key={iso}
                   value={iso}
-                  className="flex h-auto w-14 shrink-0 flex-col gap-0.5 rounded-dia bg-card py-2 text-neutral-800 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none data-active:after:opacity-0"
+                  className="flex h-auto w-14 shrink-0 flex-col gap-0.5 rounded-dia bg-card py-2 text-neutral-800 data-active:!bg-primary data-active:!text-primary-foreground data-active:shadow-none data-active:after:opacity-0"
                 >
                   <span className="text-xs">{corto}</span>
                   <span className="text-[19px] font-bold">{numero}</span>
@@ -101,8 +113,7 @@ export function SlotPicker({
           </TabsList>
         </div>
 
-        {dias.map((fecha) => {
-          const iso = fecha.toISOString().slice(0, 10);
+        {dias.map((iso) => {
           const porFranja = slotsPorDiaYFranja.get(iso);
           const hayHorarios = porFranja && porFranja.size > 0;
           return (
@@ -168,7 +179,7 @@ export function SlotPicker({
           izquierda={
             <div aria-live="polite">
               <p className="text-[13px] text-neutral-800">
-                {formatearDia(new Date(`${slotSeleccionado.fecha}T12:00:00`), hoy).corto}{" "}
+                {formatearDia(slotSeleccionado.fecha, hoyISO).corto}{" "}
                 {formatearRangoHoras(slotSeleccionado.hora_inicio, slotSeleccionado.hora_fin)}
               </p>
               <p className="text-[20px] font-bold">{formatearColones(slotSeleccionado.precio)}</p>

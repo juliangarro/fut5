@@ -3,6 +3,424 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-19 (9) — Los 3 bugs del UAT arreglados y verificados; suite Playwright 8/8 determinística; handoff de pase a producción
+
+Continuación directa de (8). Se arreglaron los 3 bugs en código real (no
+solo diagnóstico):
+
+1. **HIGH, `SlotPicker.tsx`** — confirmado que la causa era exactamente la
+   sospechada en (8): el componente recalculaba "hoy" con `new Date()` del
+   browser en vez de recibir `hoyCR()` del server. Fix: nuevo prop
+   `hoyISO: string`, pasado desde `app/futbolero/canchas/[canchaId]/page.tsx`
+   (que ya tenía `hoy = hoyCR()` calculado, solo faltaba pasarlo). Toda la
+   lógica de fechas de `SlotPicker` ahora opera sobre strings `YYYY-MM-DD`.
+   El mismo bug existía en el helper de tests `e2e/helpers/db.ts`
+   (`fechaEnDias()`) — también arreglado.
+2. **MEDIUM, `SlotPicker.tsx`** — la sospecha sin confirmar de (8) era
+   correcta a medias: no es un problema de orden de clases/merge de `cn()`,
+   sino que la variante `"line"` de `components/ui/tabs.tsx` fuerza
+   `data-active:bg-transparent` con suficiente especificidad para ganarle al
+   `data-active:bg-primary` de `SlotPicker` sin `!important`. Confirmado con
+   `getComputedStyle()` en vivo. Fix acotado a `SlotPicker.tsx` (modificador
+   `!` de Tailwind), sin tocar el `tabs.tsx` compartido.
+3. **LOW, nuevo, no estaba en el UAT report original** — encontrado como
+   efecto secundario de arreglar el test de export CSV: la rama de
+   `app/api/insights/exportar/route.ts` para admin con cero canchas no
+   mandaba `Content-Disposition: attachment`, a diferencia de la rama
+   normal. Fix: agregar el mismo header a esa rama.
+
+**Sobre Docker**: no volvió a ser un bloqueo — en esta sesión sí había
+Docker/Supabase local corriendo (`npx supabase start` funcionó sin
+problema), a diferencia de lo reportado en (8). No se investigó por qué;
+puede que se haya instalado entre sesiones.
+
+**Suite Playwright**: se amplió de 2 a 8 tests (2 preexistentes + 5 nuevos
+esta sesión más el fix del helper de fechas) y quedó en verde de forma
+determinística — se corrió repetidamente tras el fix del bug #1 para
+confirmar que ya no depende de la hora del día, a diferencia del estado
+anterior donde `futbolero-cancelar-reserva.spec.ts` solo fallaba cuando el
+reloj del browser y el calendario CR discrepaban al momento de correrlo.
+
+**Handoff completo para el pase a producción** (bugs, fixes, verificación,
+checklist pre-deploy, estado de git) en `HANDOFF-PRODUCCION.md`, nuevo en la
+raíz del repo. El trabajo sigue en la rama `test/fases-1-6-testing-infra`,
+no en `main` — falta abrir PR antes de que esto sea "producción" en el
+sentido estricto.
+
+## 2026-09-18 (8) — UAT report recibido; intento de correr la suite Playwright bloqueado (Docker no disponible) + `.env.local` sigue apuntando a producción
+
+Pedido del usuario: retomar el trabajo a partir de `UAT-Report-Dale-Cancha.md`
+(walkthrough manual vía Chrome + 7 specs Playwright escritos en la sesión
+anterior, 2 bugs encontrados). Se priorizó primero correr la suite antes de
+tocar código, para confirmar bug #1 con un test real en vez de solo lectura.
+
+**Bloqueado**: `npx supabase status` / `npx supabase start` fallan con
+`docker: command not found (podman also not found)`. A diferencia de la
+sesión de `HANDOFF-TESTING.md` (que instaló y dejó Docker Desktop corriendo),
+en esta Mac Docker no está instalado (no aparece en `/Applications`, no hay
+`docker`/`podman`/`colima`/`lima` en PATH). Tampoco hay Homebrew instalado
+para instalarlo desde acá, y el proxy de red de esta sesión devuelve 403 al
+intentar `formulae.brew.sh` — instalar Docker Desktop requiere un instalador
+gráfico que este agente no puede correr por shell. **Acción pendiente,
+bloqueante, para el usuario**: instalar Docker Desktop (o Podman) en esta
+Mac; después, `npx supabase start && npx playwright test e2e/` debería
+correr igual que en la sesión anterior (6/7 verdes esperados,
+`futbolero-cancelar-reserva.spec.ts` en rojo por el bug #1, ver abajo).
+
+**Hallazgo adicional, separado del UAT**: `.env.local` en este momento
+apunta de nuevo a producción (`NEXT_PUBLIC_SUPABASE_URL=https://pjpfkqfkbqbpjxuulnea.supabase.co`).
+El `npm run dev` "arreglado" que menciona el UAT report fue, todo indica,
+una exportación de variables de entorno en esa terminal (no persistida al
+archivo) — así que un `npm run dev` normal hoy, sin exportar nada a mano,
+volvería a levantar contra producción. `playwright.config.ts` ya tiene su
+propio guard (fuerza las credenciales locales antes de levantar el
+`webServer`, ver D-anterior en este mismo archivo), así que la suite E2E no
+corre este riesgo — pero el desarrollo manual día a día sí. Sugerencia no
+implementada todavía: mover `.env.local` a valores locales por defecto y
+usar `.env.production.local` (gitignoreado, fuera del working directory
+normal) solo cuando se necesite apuntar a producción a propósito.
+
+**Resumen de bugs del UAT, para priorizar** (detalle completo en
+`UAT-Report-Dale-Cancha.md`, escrito por el usuario a partir de la sesión de
+QA):
+1. **HIGH** — `components/shared/SlotPicker.tsx` calcula "hoy" con
+   `new Date()` del browser en vez de recibir `hoyCR()` del server
+   (`app/futbolero/canchas/[canchaId]/page.tsx` ya lo calcula, línea 36,
+   pero no se lo pasa como prop al componente). Confirmado por inspección de
+   código en esta sesión — el fix es agregar un prop `hoy: string` a
+   `SlotPicker` y usarlo en vez de `new Date()`.
+2. **MEDIUM** — Label del day-tab seleccionado se vuelve invisible (pero el
+   tab sigue funcional) tras elegir un horario en un día que no es "Hoy".
+   Sospecha sin confirmar: `components/ui/tabs.tsx` (`TabsTrigger`) ya trae
+   clases base `data-active:bg-background data-active:text-foreground`, y
+   `SlotPicker.tsx` las pisa con `data-active:bg-primary
+   data-active:text-primary-foreground` vía `className` — con Tailwind v4 y
+   `cn()` (revisar si hace merge tipo `tailwind-merge` o solo concatena), el
+   orden de las clases en el `class` final, no el orden en el código fuente,
+   decide cuál gana; si no hay merge real, es una carrera de especificidad
+   que puede resolver distinto según el build. Pendiente de confirmar antes
+   de tocar el componente compartido (`tabs.tsx` lo usan otras pantallas).
+
+**Siguiente paso, según lo acordado con el usuario**: instalar Docker en
+esta Mac y volver a intentar la suite; mientras tanto, el bug #1 puede
+arreglarse y verificarse manualmente (sin Playwright) porque el diagnóstico
+por código ya es sólido.
+
+
+## 2026-09-18 (7) — Bug crítico encontrado en QA E2E: TODAS las reservas 404an en su detalle (migración de cobro grupal nunca aplicada a producción)
+
+Pedido del usuario: "exercise end to end ui testing" contra el Preview real
+(login como futbolero.test@example.com, reservar, subir comprobante). Tras
+subir el comprobante, `/futbolero/reservas/{id}` devuelve el 404 temeado
+(`app/not-found.tsx`) para una reserva que existe, es del dueño correcto y
+está en `pendiente_validacion` — reproducido en múltiples navegaciones
+duras, con cache-busting, y confirmado por el usuario mismo ("no veo un
+problema de permisos sino una página de error"). `/futbolero/reservas`
+(la lista) sí funciona y linkea a ese mismo detalle roto.
+
+Descartado por evidencia directa:
+- **RLS**: `reservas_select_propia_o_admin`, `slots_select_publico` y
+  `canchas_select_publico` (`supabase/migrations/00000000000003_rls_policies.sql`)
+  no tienen ninguna restricción que excluya esta reserva.
+- **Cuenta equivocada**: se verificó `/futbolero/perfil` mostrando la sesión
+  correcta (`futbolero.test@example.com`) en el momento del 404.
+- **Caché de router**: todas las pruebas fueron `navigate()` duro (recarga
+  completa), no navegación client-side.
+- **Vercel logs**: las requests a esa ruta devuelven `200`, no `404` — lo
+  que en Next 16 con streaming es consistente con un `notFound()` disparado
+  DESPUÉS de que el shell ya arrancó a 200, no con un error 5xx real.
+
+Causa raíz (por inspección de código, no confirmada 100% contra la base
+real — ver nota abajo): `app/futbolero/reservas/[reservaId]/page.tsx`
+selecciona `modo_cobro, token_cobro, cantidad_aportes` de `reservas`.
+Esas 3 columnas las agrega `supabase/migrations/00000000000007_cobro_grupal.sql`,
+en el mismo commit (`fd06086`) que modificó esta página para leerlas. No
+hay ningún paso de CI/build (`vercel.json`, no hay `.github/workflows/`)
+que corra `supabase db push` — se aplica a mano. Todo indica que esa
+migración (y probablemente 8-11, que dependen de ella) **nunca se corrió
+contra producción**. Sin esas columnas, Postgres devuelve un error de
+columna inexistente; `supabase-js` no tira excepción para eso, devuelve
+`{ data: null, error }`; y el código original solo miraba `!reserva`,
+así que cualquier error de Postgres en esa query — no solo "no existe" —
+se mostraba como el 404 genérico. Esto rompería el detalle de **cualquier**
+reserva, no solo la de esta prueba, lo cual coincide con lo observado.
+
+No se pudo verificar directamente contra la base de producción: un intento
+de leer el dashboard de Supabase fue bloqueado por una guardia interna de
+la herramienta de este agente (lectura de datos de producción), y un
+intento anterior de consultar por `service_role` vía `curl` desde el
+sandbox falló por restricción de red saliente (proxy 403 al host de
+Supabase). La causa queda como diagnóstico de código de alta confianza,
+pendiente de confirmación por el usuario.
+
+**Arreglado en el mismo archivo, como mitigación (no como fix de la causa
+raíz):** las 3 queries de esa página (`reserva`, `slot`, `cancha`) ahora
+capturan `error` y, si hay un error real de Postgres (código distinto de
+`PGRST116`, que es "0 filas" de `.single()`), lo loguean con
+`console.error` y lanzan, disparando el error boundary (`global-error.tsx`)
+en vez de camuflarse de `notFound()`. Esto no arregla el bug — solo evita
+que la próxima vez un error de schema se vea idéntico a un 404 legítimo.
+
+**Acción pendiente, bloqueante, para el usuario**: correr
+`supabase db push` (o el equivalente manual) contra el proyecto de
+producción para aplicar `00000000000007_cobro_grupal.sql` en adelante, y
+recién ahí re-verificar `/futbolero/reservas/{id}` en Preview. Ver
+`HANDOFF.md` (actualización 2026-09-18) para el resumen orientado al
+siguiente agente.
+
+Queda una reserva de prueba real sin limpiar en producción:
+`782b1d0b-7e7b-45fe-ad91-9b6cce728202` (futbolero.test@example.com,
+Cancha El Estadio, ₡18.000, `pendiente_validacion`).
+
+## 2026-09-18 (6) — Fix: mismo bug de reintento no-idempotente en el comprobante de aportes (cobro grupal)
+
+Pedido del usuario: "inspect for any smells" sobre el repo. Al revisar
+`components/pago/PaginaAporte.tsx` encontré que su función
+`subirComprobante` es casi un calco de `subirConReintentos` en
+`ComprobanteUploader.tsx` (mismos reintentos, mismo timeout, misma lógica
+de status code) — y que la ruta a la que le pega,
+`app/api/pago/[token]/aportes/[aporteId]/comprobante/route.ts`, tenía
+exactamente el mismo bug que ya se había corregido hoy en
+`app/api/reservas/[id]/comprobante/route.ts` (ver entrada (4)... la (1)
+de la sesión de hoy, arriba): un reintento tras un timeout con la subida
+ya exitosa del lado del servidor (aporte movido a `comprobante_subido`)
+se rechazaba con 409 "Este aporte ya tiene un comprobante en revisión."
+en vez de tratarse como éxito idempotente.
+
+Fix (mismo patrón): si `aporte.estado === "comprobante_subido"`, la ruta
+ahora responde `200 { ok: true, already: true }` en vez de 409.
+`"confirmado"` sigue bloqueando — ese sí es un cierre real, no algo que
+un reintento propio deba superar.
+
+**No agregué test para este archivo** — no existía ninguno
+(`app/api/pago/[token]/aportes/[aporteId]/comprobante/route.ts` no tenía
+`route.test.ts`, ni tampoco `app/api/aportes/[id]/confirmar/route.ts`) y
+con el `node_modules`/`rolldown` roto de esta sesión (ver entrada (4)) no
+podía correr vitest para verificar uno antes de dejarlo escrito — preferí
+no comitear un test sin ejecutar. Pendiente una vez se reinstale
+`node_modules`: escribir `route.test.ts` para esta ruta espejando
+`app/api/reservas/[id]/comprobante/route.test.ts` (incluyendo el caso
+`comprobante_subido` → 200 idempotente).
+
+`npx tsc --noEmit` limpio.
+
+## 2026-09-18 (5) — Fix: 404 y "pantalla negra" al navegar entre acciones
+
+Reportado por el usuario: "a veces recibo un 404 y pantalla negra al
+moverme entre acciones", sin pasos exactos de reproducción. Intenté
+reproducirlo en vivo contra el deploy de preview
+(`fut5-bv3a8fcx5-juliangarro26-4741s-projects.vercel.app`) con el
+navegador del agente, pero esa URL tiene Vercel Authentication activado
+(protección de preview deployments) y redirige a un login de Vercel al
+que el agente no tiene acceso — no se pudo reproducir en vivo, el
+diagnóstico de abajo sale de revisar el código.
+
+Dos hallazgos que combinados explican ambos síntomas:
+
+1. **`app/futbolero/reservas/[reservaId]/page.tsx` usaba `notFound()` para
+   el chequeo de sesión** (`if (!user) notFound()`), a diferencia de
+   *todas* las demás páginas protegidas del repo, que usan
+   `redirect("/login")` (`app/futbolero/perfil/page.tsx`,
+   `app/admin/canchas/page.tsx`, etc. — grep de `if (!user)` en `app/`
+   los confirma). Si la sesión expira o el refresh de cookie en
+   `proxy.ts`/`lib/supabase/middleware.ts` no llega a tiempo mientras el
+   futbolero navega rápido entre pantallas (típicamente entrando a "Mis
+   reservas" → detalle de una reserva), esta página mostraba un 404 en
+   vez de mandar a loguearse de nuevo como en cualquier otro lugar de la
+   app.
+2. **No existía `app/not-found.tsx` ni `app/error.tsx` ni
+   `app/global-error.tsx`** en todo el proyecto. Sin un `not-found.tsx`
+   propio, cualquier `notFound()` (el del punto 1, u otro legítimo)
+   mostraba la página 404 genérica de Next, sin el fondo crema ni el
+   sistema de diseño — no es negra por sí sola, pero no tiene ninguna
+   relación visual con el resto de la app. El caso más grave es sin
+   `global-error.tsx`: una excepción no capturada que escapa incluso del
+   `RootLayout` (ej. algo que tira antes de que el `<body>` con el fondo
+   crema llegue a pintarse) hace que Next dibuje su propio documento de
+   emergencia sin ningún estilo — en un sistema con modo oscuro (SO o
+   navegador) esa página en blanco sin CSS puede pintarse casi negra,
+   calzando con el reporte de "pantalla negra".
+
+Fix:
+- `reservas/[reservaId]/page.tsx`: `notFound()` → `redirect("/login")`
+  para el chequeo de sesión, igual que el resto del repo.
+- `app/not-found.tsx`: página 404 con el sistema de diseño (`EmptyState`
+  visualmente, ícono + texto + botón "Volver al inicio"), en vez de la
+  genérica de Next.
+- `app/global-error.tsx`: página de error de emergencia con el mismo
+  fondo crema de la app (tiene que traer su propio `<html>`/`<body>`
+  porque reemplaza el layout entero, no solo el contenido) y un botón
+  "Reintentar".
+
+No cubre todas las causas posibles de un 404 real (ej. R1/R2 de
+plan-rediseno-dale-cancha.md — reservas `creada` sin expiración, cron una
+vez al día — pueden dejar recursos en estados raros que sí ameritan un
+404 legítimo). Lo que este fix corrige es que ese 404, legítimo o no, ya
+no se vea como una pantalla en blanco sin marca, y que el caso específico
+de sesión vencida en la página de detalle de reserva ya no se confunda
+con "la reserva no existe". `npx tsc --noEmit` limpio; no se corrió el
+suite de tests por el mismo problema de `node_modules`/`rolldown` roto
+mencionado en la entrada anterior — no relacionado a este cambio.
+
+Pendiente si el usuario puede reproducirlo de nuevo: capturar la URL
+exacta donde pasa y si la consola del navegador muestra algún error (F12
+→ Console) en el momento del 404/pantalla negra — eso confirmaría si es
+este bug de sesión u otra causa (ej. una `notFound()` distinta con datos
+realmente ausentes por R1/R2).
+
+## 2026-09-18 (4) — Fix: gráfico de `IngresosTrend` desproporcionado en desktop
+
+Reportado por el usuario con captura de `/admin/insights`: la barra de la
+semana con más ingresos aparecía cortada arriba (etiqueta "155k" fuera de
+vista) y las etiquetas "Sem 1"..."Sem 5" se veían pegadas sin espacio,
+todo dibujado varias veces más grande de lo normal.
+
+Causa: el `<svg>` de `components/admin/IngresosTrend.tsx` (Fase 12 del
+rediseño, ver plan-rediseno-dale-cancha.md) usaba `width="100%"` sin
+`height`, tal como lo pedía el plan ("responsivo"). Sin un `height`
+explícito, el navegador deriva el alto del aspect ratio del `viewBox`
+(`ancho × (ALTO+24)`, con `ancho` chico — 192px para 5 semanas) y lo
+escala para llenar el ancho real del contenedor. En un panel de admin
+ancho en desktop eso multiplica todo (barras, texto de 12/13px, gap) por
+un factor grande — de ahí el valor cortado arriba y las etiquetas
+solapadas: no es un problema de datos, es que todo el SVG se infló.
+
+Fix: `width={ancho}` y `height={ALTO + 24}` fijos en vez de `width="100%"`.
+El gráfico ahora se dibuja siempre a su tamaño de diseño; `overflow-x-auto`
+del contenedor (ya existía) sigue resolviendo el desborde en pantallas
+angostas. Esto es una corrección sobre lo que decía el plan en Fase 12
+("SVG con viewBox y width=\"100%\" (responsivo)") — el enunciado asumía
+que "responsivo" implicaba solo estirar el ancho, pero sin alto fijo
+termina estirando todo el dibujo. `npx tsc --noEmit` limpio; no se corrió
+el suite de tests porque `node_modules` tiene un binario nativo de
+`rolldown` roto en este entorno (bug conocido de npm con dependencias
+opcionales, no relacionado a este cambio) — reinstalar `node_modules` lo
+resolvería, pendiente de que el usuario lo confirme.
+
+## 2026-09-18 (3) — Insights Pro en `/admin/insights` (los 4 adicionales de §2 del plan)
+
+El dashboard base (`/admin/insights`) ya existía gratis para todos (ver
+entrada "2026-09-15 — Dashboard de insights" más abajo). Esta entrada
+agrega los 4 insights adicionales de `plan-monetizacion-admin.md` sección
+2 ("Insights adicionales que agregaría para el tier pago"), gateados
+detrás de `nivelDeAcceso` — nuevo archivo `lib/insightsPro.ts`, sección
+nueva en `app/admin/insights/page.tsx` (upsell si `nivelDeAcceso ===
+'gratis'`, insights reales si no).
+
+- **Horario más rentable / hora con menos ocupación**: agrupa
+  ingreso/ocupación por franja horaria dentro del período seleccionado.
+  `horaMenosOcupada` exige mínimo 3 slots en la franja para no sacar
+  conclusiones de una sola franja con 1-2 horarios.
+- **Alertas proactivas**: comprobantes con +20 min sin validar (consulta
+  en vivo, sin filtro de período) y caída de ocupación semana vs. semana
+  anterior (umbral: solo alerta si cae ≥10 puntos, para no generar ruido
+  por fluctuaciones menores).
+- **Predicción simple de demanda**: media móvil de 6 semanas por (día de
+  semana, hora) — compara promedio de las 3 semanas recientes vs. las 3
+  anteriores, exige ≥2 reservas/semana de señal reciente y ≥30% de
+  crecimiento para reportar. Sin ML, tal como pide la sección 2.
+- **Benchmark de plataforma (comparación anónima de ocupación)**: acá
+  hubo una corrección sobre lo que le dije al usuario antes de construir
+  — asumí que hacía falta una función SQL `security definer` + migración
+  nueva para leer datos de canchas ajenas. Al revisar la RLS existente,
+  `slots` ya tiene `slots_select_publico for select using (true)`
+  (00000000000001/3, no es nuevo) — así que el benchmark de **ocupación**
+  se puede calcular con la sesión normal del admin, sin función nueva ni
+  migración, filtrando en JS las canchas propias del resto. Ingresos NO
+  se pueden benchmarkear igual (`reservas.monto` de otros admins sí está
+  protegido por RLS) — eso sí necesitaría una función nueva, fuera de
+  alcance de esta entrada. Guardia de anonimato: mínimo 5 canchas ajenas
+  en la muestra (sugerido por el usuario), si no `benchmarkOcupacion` es
+  `null`.
+
+**Verificado contra producción** (mismo patrón que la entrada del
+2026-09-15: datos reales, sin fabricar filas en `reservas`/`slots`):
+script Node con service role que (1) encontró un admin real con canchas y
+reservas confirmadas, (2) confirmó `suscripciones` vacío = gratis, (3)
+insertó una fila de prueba `tier='pro'`, (4) confirmó la relectura, (5)
+corrió la misma lógica de agregación que `lib/insightsPro.ts` contra los
+datos reales de ese admin y verificó a mano que `ingresoPorHora` suma
+igual al ingreso total, que `horaMasRentable` señala la franja correcta,
+y que `benchmarkOcupacion` da `null` correctamente porque la plataforma
+piloto hoy solo tiene 3 canchas ajenas (bajo el mínimo de 5) — la guardia
+de anonimato funciona como se diseñó. (6) borró la fila de prueba y
+confirmó que no quedó rastro. `npx tsc --noEmit` y `npm run lint`
+también limpios.
+
+## 2026-09-18 (2) — Decisiones de negocio pendientes en plan-monetizacion-admin.md §7
+
+Cuatro de las cinco preguntas abiertas de la sección 7 del plan, resueltas
+por el usuario con contexto completo de SPEC.md/DECISIONS.md/el pivote a
+"Dale Cancha" (detalle y razonamiento completo en el plan, sección 7):
+
+1. **Precio Pro/Pro+**: se mantiene el rango de la sección 1 (~₡10,000 /
+   ~₡20,000) como ancla, se fija en firme después del piloto (SPEC.md
+   12.1), no antes. **Precio de "Destacado"/moderación**: ₡3,000-5,000/mes
+   por cancha destacada — bajo a propósito, compite por el mismo
+   presupuesto que Pro y el AdminCancha típico es sensible a precio.
+2. **Tier gratis**: ilimitado, sin topes de canchas/reservas — meter un
+   tope apilaría fricción justo donde el plan dice que no hay que
+   apilarla (riesgo #1: que ni prueben el flujo).
+4. **Automatizar reactivación de pago**: no ahora, pero con gatillo
+   concreto (>15-20 cuentas pagando activas, u ops reportando >X
+   min/semana), no "cuando duela" — para que no sea deuda técnica
+   invisible.
+
+**Sin resolver (3 y 5), explícitamente dejadas pendientes por el
+usuario:** la interpretación de "sin importar filtros" para Destacado
+(sección 6.2 del plan), y la dependencia de login real (Fase 1 del
+roadmap) que bloquea Destacado/moderación por completo — esta última es
+la que manda: aunque 1 y 3 tengan respuesta, no tiene sentido construir
+ese código hasta que exista login real.
+
+No se tocó código en esta entrada — solo se actualizó
+`plan-monetizacion-admin.md` (secciones 1, 4.2, 6.3, 7) para reflejar
+estas decisiones.
+
+## 2026-09-18 — Infraestructura de monetización admin (suscripciones + add-ons)
+
+Ver `plan-monetizacion-admin.md` sección 6 para el diseño completo. Rumbo
+aprobado por el usuario el mismo día (sección 6.0 del plan): "Destacado" y
+moderación de reportes son un **add-on separado**, no empaquetado dentro
+de los tiers Pro/Pro+; la suscripción es **por cuenta AdminCancha**, no
+por cancha.
+
+Construido en esta pasada: migraciones `00000000000009`–`00000000000011`
+(tablas `suscripciones` y `addons_suscripcion`, función
+`vencer_suscripciones_y_addons`), su rollback combinado en
+`supabase/rollback/`, `lib/suscripciones.ts` (gating: `nivelDeAcceso`,
+`tieneDestacado`, `tieneModeracionReportes`), tipos en
+`lib/types/database.ts`, y el cron
+`app/api/cron/vencer-suscripciones/route.ts` + entrada en `vercel.json`.
+`npx tsc --noEmit` y `npm run lint` limpios.
+
+Dos ajustes sobre el borrador del plan, documentados en detalle en la
+sección 6.4 del plan:
+- Se agregó una policy de SELECT público en `addons_suscripcion` para
+  `destacado` activo — sin ella el listado de búsqueda del Futbolero no
+  podría leer qué canchas están destacadas. Es información pública por
+  diseño (se muestra como "Patrocinado"), no una relajación riesgosa.
+- El kill switch `monetizacion_habilitada` (fail-open) solo aplica a
+  `nivelDeAcceso`, no a los add-ons — un bug en el add-on oculta como
+  mucho una promoción ya pagada, no bloquea el uso del producto; tratarlo
+  igual hubiera marcado a todas las canchas como destacadas al apagarlo.
+
+**Deliberadamente sin tocar todavía** (mismo criterio que ya aplica el
+repo — migrar la UI cuando se construye la feature consumidora, no
+antes): el `sort` de `ListaCanchas.tsx` no usa `tieneDestacado`, el
+dashboard de insights y el botón de reportar comentario no existen. La
+interpretación de "sin importar filtros" para "Destacado" (6.2 del plan)
+sigue sin confirmar con Pamela — bloquea conectar el gating a
+`ListaCanchas.tsx`, no el resto del modelo.
+
+**Actualización 2026-09-18 (mismo día):** el usuario corrió las 3
+migraciones (009-011) contra el proyecto Supabase real vía SQL Editor —
+las tres reportaron éxito. La base ya tenía 001-008 aplicadas de antes de
+esta sesión. A partir de este momento `suscripciones` y
+`addons_suscripcion` existen de verdad, con RLS activo — cualquier cambio
+futuro a estas tablas necesita una migración nueva, no editar las
+009-011 in place.
+
 ## 2026-09-16 — Cierre del rediseño Organic (Fases 0-13 de plan-rediseno-dale-cancha.md)
 
 Las 13 fases del rediseño se ejecutaron de corrido en la rama

@@ -88,7 +88,7 @@ export default async function CanchaDetailPage({
 
         <div className="mt-1 flex flex-col gap-3">
           <h2 className="text-lg font-bold">Horarios disponibles</h2>
-          <SlotPicker canchaId={canchaId} slots={slots ?? []} franjaMasPedida={franjaMasPedida} />
+          <SlotPicker canchaId={canchaId} slots={slots ?? []} franjaMasPedida={franjaMasPedida} hoyISO={hoy} />
         </div>
       </div>
     </div>

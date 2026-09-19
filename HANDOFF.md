@@ -1,5 +1,65 @@
 # Handoff — sesión del 2026-09-16 (rediseño Organic, Fases 0-13 completas)
 
+> **Actualización 2026-09-18, sesión de debug + QA E2E en Preview (acción
+> urgente pendiente arriba de todo lo demás):** se arreglaron 4 bugs
+> reportados por el usuario (retry no-idempotente al resubir comprobante
+> en `app/api/reservas/[id]/comprobante/route.ts` y su gemelo en
+> `app/api/pago/[token]/aportes/[aporteId]/comprobante/route.ts`; escala
+> desproporcionada del gráfico de `IngresosTrend.tsx`; 404/pantalla negra
+> por falta de `app/not-found.tsx`/`app/global-error.tsx` propios y un
+> `notFound()` inconsistente en vez de `redirect("/login")` en
+> `app/futbolero/reservas/[reservaId]/page.tsx`) — commiteado y pusheado
+> en `test/fases-1-6-testing-infra` (`a54ecc0`), verificado en vivo en el
+> Preview re-deployado.
+>
+> **Haciendo QA E2E real contra ese Preview apareció un quinto bug, más
+> grave: el detalle de CUALQUIER reserva (`/futbolero/reservas/{id}`)
+> devuelve 404 siempre**, aunque la reserva exista, sea del dueño correcto
+> y esté en un estado válido (confirmado con una reserva de prueba real,
+> `futbolero.test@example.com`, cancha "El Estadio"). La lista
+> `/futbolero/reservas` sí funciona y linkea bien a ese mismo detalle roto.
+> Se descartaron RLS (policies de `reservas`/`slots`/`canchas` son
+> públicas o por dueño, revisadas en
+> `supabase/migrations/00000000000003_rls_policies.sql`) y caché de
+> router (todas las pruebas fueron `navigate()` duro). **Causa real
+> encontrada por inspección de código**: el `.select()` de esa página
+> pide `modo_cobro, token_cobro, cantidad_aportes` — columnas que agregó
+> `supabase/migrations/00000000000007_cobro_grupal.sql` (mismo commit
+> `fd06086` que además tocó esta misma página para leerlas) — y todo
+> indica que esa migración (y probablemente 8-11, que le siguen) **nunca
+> se aplicó a la base de producción** (no hay ningún paso de CI/build que
+> corra `supabase db push`; hay que correrlo a mano). Sin esas columnas,
+> Postgres devuelve error, el cliente de Supabase no tira excepción (solo
+> `data: null, error: ...`), y el `if (!reserva) notFound()` original lo
+> disfrazaba de "reserva no existe" — exactamente igual para cualquier
+> reserva. **No se pudo confirmar 100% contra la base real** (acceso de
+> solo lectura a producción bloqueado por una guardia interna de esta
+> herramienta al intentar leer el dashboard de Supabase directamente),
+> pero la evidencia de código es contundente.
+>
+> Ya se arregló, en el mismo archivo, que un error real de Postgres en
+> esas tres queries (`reserva`, `slot`, `cancha`) ya no se camufle de 404:
+> ahora se loguea (`console.error`, visible en Vercel → Logs) y dispara el
+> error boundary (`global-error.tsx`, ya temeado) en vez de
+> `notFound()`. Esto es defensivo — **no reemplaza aplicar la migración
+> pendiente**. **Próximo paso obligatorio antes de seguir con cualquier
+> prueba de reservas en Preview/producción**: correr
+> `supabase db push` (o el equivalente) contra el proyecto de producción
+> para aplicar `00000000000007_cobro_grupal.sql` en adelante, y recién
+> ahí re-verificar `/futbolero/reservas/{id}` en vivo. Sin este paso, la
+> función de cobro grupal tampoco puede estar funcionando en producción
+> pese a estar mergeada.
+>
+> Queda una reserva de prueba real y sin limpiar en producción:
+> `782b1d0b-7e7b-45fe-ad91-9b6cce728202` (futbolero.test@example.com,
+> Cancha El Estadio, ₡18.000, `pendiente_validacion`) — falta cerrar el
+> loop E2E completo (aprobarla como admin en `/admin/validaciones` y
+> confirmar que el lado futbolero pasa a "Confirmada", idealmente por
+> realtime) una vez aplicada la migración de arriba. Ver `DECISIONS.md`
+> (entradas 2026-09-18) y `TESTING.md` sección 8 para el detalle completo
+> de esta sesión.
+
+
 > Para el siguiente agente (o para retomar en una sesión nueva). Reemplaza
 > el handoff anterior (2026-09-15, rename a "Dale Cancha" — esa tarea ya
 > se ejecutó, verificó y pusheó; ver `git log main` si hace falta ese
