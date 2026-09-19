@@ -10,11 +10,12 @@ import { ComprobanteUploader } from "@/components/shared/ComprobanteUploader";
 import { FotoCancha } from "@/components/shared/FotoCancha";
 import { ETIQUETA_ESTADO_RESERVA, TONO_ESTADO_RESERVA } from "@/components/shared/EstadoReservaBadge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { CobroGrupal } from "@/components/futbolero/CobroGrupal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatearColones, formatearFechaLarga, formatearHoraDeTimestamp, formatearRangoHoras } from "@/lib/formato";
-import type { EstadoReserva } from "@/lib/types/database";
+import type { EstadoAporte, EstadoReserva, ModoCobro } from "@/lib/types/database";
 
 type ReservaVista = {
   id: string;
@@ -23,6 +24,9 @@ type ReservaVista = {
   motivo_rechazo: string | null;
   expira_at: string | null;
   comprobante_subido_at: string | null;
+  modo_cobro: ModoCobro;
+  token_cobro: string | null;
+  cantidad_aportes: number | null;
 };
 
 const PASOS_TIMELINE = ["Reservado", "Comprobante", "Confirmado"] as const;
@@ -61,12 +65,18 @@ export function ReservaEstado({
   cancha,
   slot,
   onCancelar,
+  aportesIniciales,
+  origenSitio,
+  cobroGrupalHabilitado,
 }: {
   reservaInicial: ReservaVista;
   comprobanteUrl: string | null;
   cancha: { nombre: string; numero_sinpe: string; foto: string | null };
   slot: { fecha: string; hora_inicio: string; hora_fin: string };
   onCancelar: (reservaId: string) => Promise<void>;
+  aportesIniciales: { id: string; nombre: string; estado: EstadoAporte }[];
+  origenSitio: string;
+  cobroGrupalHabilitado: boolean;
 }) {
   const router = useRouter();
   const [reserva, setReserva] = useState(reservaInicial);
@@ -75,26 +85,40 @@ export function ReservaEstado({
 
   useEffect(() => {
     const supabase = createClient();
-    const canal = supabase
-      .channel(`reserva-${reserva.id}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "reservas", filter: `id=eq.${reserva.id}` },
-        (payload) => {
-          const nueva = payload.new as ReservaVista;
-          if (nueva.estado !== reserva.estado) {
-            toast.info(`Tu reserva pasó a: ${ETIQUETA_ESTADO_RESERVA[nueva.estado]}`);
-            // La URL firmada del comprobante (si cambia) solo se puede
-            // refrescar releyendo el Server Component.
-            router.refresh();
+    let canal: ReturnType<typeof supabase.channel> | null = null;
+    let cancelado = false;
+
+    // El cliente de `@supabase/ssr` guarda la sesión en cookies y la hidrata
+    // de forma asíncrona — si se llama a `.subscribe()` antes de que eso
+    // termine, el join de Realtime sale sin el access_token del usuario, y
+    // Realtime evalúa las RLS policies como anónimo. Como
+    // reservas_select_propia_o_admin exige auth.uid(), la suscripción queda
+    // "conectada" pero nunca entrega los postgres_changes de esta fila (sin
+    // error visible). Esperar la sesión antes de suscribirse lo evita.
+    supabase.auth.getSession().then(() => {
+      if (cancelado) return;
+      canal = supabase
+        .channel(`reserva-${reserva.id}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "reservas", filter: `id=eq.${reserva.id}` },
+          (payload) => {
+            const nueva = payload.new as ReservaVista;
+            if (nueva.estado !== reserva.estado) {
+              toast.info(`Tu reserva pasó a: ${ETIQUETA_ESTADO_RESERVA[nueva.estado]}`);
+              // La URL firmada del comprobante (si cambia) solo se puede
+              // refrescar releyendo el Server Component.
+              router.refresh();
+            }
+            setReserva(nueva);
           }
-          setReserva(nueva);
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    });
 
     return () => {
-      supabase.removeChannel(canal);
+      cancelado = true;
+      if (canal) supabase.removeChannel(canal);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -225,7 +249,7 @@ export function ReservaEstado({
           </Card>
         )}
 
-        {reserva.estado === "creada" && (
+        {reserva.estado === "creada" && reserva.modo_cobro === "individual" && (
           <Card className="gap-4 px-4 py-4">
             <p className="text-[15px]">
               Transferí <strong>{formatearColones(reserva.monto)}</strong> por SINPE Móvil al número{" "}
@@ -233,6 +257,18 @@ export function ReservaEstado({
             </p>
             <ComprobanteUploader reservaId={reserva.id} />
           </Card>
+        )}
+
+        {reserva.estado === "creada" && cobroGrupalHabilitado && (
+          <CobroGrupal
+            reservaId={reserva.id}
+            montoTotal={reserva.monto}
+            modoCobro={reserva.modo_cobro}
+            tokenCobro={reserva.token_cobro}
+            cantidadAportes={reserva.cantidad_aportes}
+            aportesIniciales={aportesIniciales}
+            origenSitio={origenSitio}
+          />
         )}
 
         {reserva.estado === "creada" && (
