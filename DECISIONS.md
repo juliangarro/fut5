@@ -3,6 +3,71 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-18 (7) — Bug crítico encontrado en QA E2E: TODAS las reservas 404an en su detalle (migración de cobro grupal nunca aplicada a producción)
+
+Pedido del usuario: "exercise end to end ui testing" contra el Preview real
+(login como futbolero.test@example.com, reservar, subir comprobante). Tras
+subir el comprobante, `/futbolero/reservas/{id}` devuelve el 404 temeado
+(`app/not-found.tsx`) para una reserva que existe, es del dueño correcto y
+está en `pendiente_validacion` — reproducido en múltiples navegaciones
+duras, con cache-busting, y confirmado por el usuario mismo ("no veo un
+problema de permisos sino una página de error"). `/futbolero/reservas`
+(la lista) sí funciona y linkea a ese mismo detalle roto.
+
+Descartado por evidencia directa:
+- **RLS**: `reservas_select_propia_o_admin`, `slots_select_publico` y
+  `canchas_select_publico` (`supabase/migrations/00000000000003_rls_policies.sql`)
+  no tienen ninguna restricción que excluya esta reserva.
+- **Cuenta equivocada**: se verificó `/futbolero/perfil` mostrando la sesión
+  correcta (`futbolero.test@example.com`) en el momento del 404.
+- **Caché de router**: todas las pruebas fueron `navigate()` duro (recarga
+  completa), no navegación client-side.
+- **Vercel logs**: las requests a esa ruta devuelven `200`, no `404` — lo
+  que en Next 16 con streaming es consistente con un `notFound()` disparado
+  DESPUÉS de que el shell ya arrancó a 200, no con un error 5xx real.
+
+Causa raíz (por inspección de código, no confirmada 100% contra la base
+real — ver nota abajo): `app/futbolero/reservas/[reservaId]/page.tsx`
+selecciona `modo_cobro, token_cobro, cantidad_aportes` de `reservas`.
+Esas 3 columnas las agrega `supabase/migrations/00000000000007_cobro_grupal.sql`,
+en el mismo commit (`fd06086`) que modificó esta página para leerlas. No
+hay ningún paso de CI/build (`vercel.json`, no hay `.github/workflows/`)
+que corra `supabase db push` — se aplica a mano. Todo indica que esa
+migración (y probablemente 8-11, que dependen de ella) **nunca se corrió
+contra producción**. Sin esas columnas, Postgres devuelve un error de
+columna inexistente; `supabase-js` no tira excepción para eso, devuelve
+`{ data: null, error }`; y el código original solo miraba `!reserva`,
+así que cualquier error de Postgres en esa query — no solo "no existe" —
+se mostraba como el 404 genérico. Esto rompería el detalle de **cualquier**
+reserva, no solo la de esta prueba, lo cual coincide con lo observado.
+
+No se pudo verificar directamente contra la base de producción: un intento
+de leer el dashboard de Supabase fue bloqueado por una guardia interna de
+la herramienta de este agente (lectura de datos de producción), y un
+intento anterior de consultar por `service_role` vía `curl` desde el
+sandbox falló por restricción de red saliente (proxy 403 al host de
+Supabase). La causa queda como diagnóstico de código de alta confianza,
+pendiente de confirmación por el usuario.
+
+**Arreglado en el mismo archivo, como mitigación (no como fix de la causa
+raíz):** las 3 queries de esa página (`reserva`, `slot`, `cancha`) ahora
+capturan `error` y, si hay un error real de Postgres (código distinto de
+`PGRST116`, que es "0 filas" de `.single()`), lo loguean con
+`console.error` y lanzan, disparando el error boundary (`global-error.tsx`)
+en vez de camuflarse de `notFound()`. Esto no arregla el bug — solo evita
+que la próxima vez un error de schema se vea idéntico a un 404 legítimo.
+
+**Acción pendiente, bloqueante, para el usuario**: correr
+`supabase db push` (o el equivalente manual) contra el proyecto de
+producción para aplicar `00000000000007_cobro_grupal.sql` en adelante, y
+recién ahí re-verificar `/futbolero/reservas/{id}` en Preview. Ver
+`HANDOFF.md` (actualización 2026-09-18) para el resumen orientado al
+siguiente agente.
+
+Queda una reserva de prueba real sin limpiar en producción:
+`782b1d0b-7e7b-45fe-ad91-9b6cce728202` (futbolero.test@example.com,
+Cancha El Estadio, ₡18.000, `pendiente_validacion`).
+
 ## 2026-09-18 (6) — Fix: mismo bug de reintento no-idempotente en el comprobante de aportes (cobro grupal)
 
 Pedido del usuario: "inspect for any smells" sobre el repo. Al revisar

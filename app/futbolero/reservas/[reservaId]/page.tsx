@@ -27,13 +27,30 @@ export default async function ReservaDetallePage({
   // entre acciones".
   if (!user) redirect("/login");
 
-  const { data: reserva } = await supabase
+  const { data: reserva, error: reservaError } = await supabase
     .from("reservas")
     .select(
       "id, futbolero_id, estado, monto, motivo_rechazo, expira_at, slot_id, comprobante_url, comprobante_subido_at, modo_cobro, token_cobro, cantidad_aportes"
     )
     .eq("id", reservaId)
     .single();
+
+  // Nota (2026-09-18): antes esto solo miraba `!reserva`, así que un error
+  // real de Postgres (p.ej. una columna que no existe porque falta correr
+  // una migración pendiente en producción) llegaba acá con `data: null` y
+  // `error` seteado, y se mostraba como un 404 "no encontramos esta
+  // página" indistinguible de una reserva legítimamente inexistente.
+  // Encontrado end-to-end: TODAS las reservas devolvían 404 en el detalle
+  // (pero sí listaban bien en /futbolero/reservas, que selecciona menos
+  // columnas) — causado por modo_cobro/token_cobro/cantidad_aportes
+  // (migración 00000000000007_cobro_grupal.sql) no aplicada aún en la base
+  // de producción. Ahora un error real de Postgres se loguea y dispara el
+  // error boundary (global-error.tsx) en vez de camuflarse de 404, para que
+  // esto sea visible en los logs de Vercel la próxima vez.
+  if (reservaError && reservaError.code !== "PGRST116") {
+    console.error("[reservas/[reservaId]] error consultando reserva:", reservaError);
+    throw new Error("No se pudo cargar la reserva. Intentá de nuevo en un momento.");
+  }
 
   if (!reserva || reserva.futbolero_id !== user.id) notFound();
 
@@ -59,18 +76,26 @@ export default async function ReservaDetallePage({
   // después (ver lib/featureFlags.ts).
   const mostrarCobroGrupal = reserva.modo_cobro === "grupal" || (await cobroGrupalHabilitado(supabase));
 
-  const { data: slot } = await supabase
+  const { data: slot, error: slotError } = await supabase
     .from("slots")
     .select("fecha, hora_inicio, hora_fin, cancha_id")
     .eq("id", reserva.slot_id)
     .single();
+  if (slotError && slotError.code !== "PGRST116") {
+    console.error("[reservas/[reservaId]] error consultando slot:", slotError);
+    throw new Error("No se pudo cargar la reserva. Intentá de nuevo en un momento.");
+  }
   if (!slot) notFound();
 
-  const { data: cancha } = await supabase
+  const { data: cancha, error: canchaError } = await supabase
     .from("canchas")
     .select("nombre, numero_sinpe, fotos")
     .eq("id", slot.cancha_id)
     .single();
+  if (canchaError && canchaError.code !== "PGRST116") {
+    console.error("[reservas/[reservaId]] error consultando cancha:", canchaError);
+    throw new Error("No se pudo cargar la reserva. Intentá de nuevo en un momento.");
+  }
   if (!cancha) notFound();
 
   // Lectura nueva (Fase 8): el futbolero puede leer su propio comprobante vía
