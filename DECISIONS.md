@@ -3,6 +3,110 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-19 (9) — Los 3 bugs del UAT arreglados y verificados; suite Playwright 8/8 determinística; handoff de pase a producción
+
+Continuación directa de (8). Se arreglaron los 3 bugs en código real (no
+solo diagnóstico):
+
+1. **HIGH, `SlotPicker.tsx`** — confirmado que la causa era exactamente la
+   sospechada en (8): el componente recalculaba "hoy" con `new Date()` del
+   browser en vez de recibir `hoyCR()` del server. Fix: nuevo prop
+   `hoyISO: string`, pasado desde `app/futbolero/canchas/[canchaId]/page.tsx`
+   (que ya tenía `hoy = hoyCR()` calculado, solo faltaba pasarlo). Toda la
+   lógica de fechas de `SlotPicker` ahora opera sobre strings `YYYY-MM-DD`.
+   El mismo bug existía en el helper de tests `e2e/helpers/db.ts`
+   (`fechaEnDias()`) — también arreglado.
+2. **MEDIUM, `SlotPicker.tsx`** — la sospecha sin confirmar de (8) era
+   correcta a medias: no es un problema de orden de clases/merge de `cn()`,
+   sino que la variante `"line"` de `components/ui/tabs.tsx` fuerza
+   `data-active:bg-transparent` con suficiente especificidad para ganarle al
+   `data-active:bg-primary` de `SlotPicker` sin `!important`. Confirmado con
+   `getComputedStyle()` en vivo. Fix acotado a `SlotPicker.tsx` (modificador
+   `!` de Tailwind), sin tocar el `tabs.tsx` compartido.
+3. **LOW, nuevo, no estaba en el UAT report original** — encontrado como
+   efecto secundario de arreglar el test de export CSV: la rama de
+   `app/api/insights/exportar/route.ts` para admin con cero canchas no
+   mandaba `Content-Disposition: attachment`, a diferencia de la rama
+   normal. Fix: agregar el mismo header a esa rama.
+
+**Sobre Docker**: no volvió a ser un bloqueo — en esta sesión sí había
+Docker/Supabase local corriendo (`npx supabase start` funcionó sin
+problema), a diferencia de lo reportado en (8). No se investigó por qué;
+puede que se haya instalado entre sesiones.
+
+**Suite Playwright**: se amplió de 2 a 8 tests (2 preexistentes + 5 nuevos
+esta sesión más el fix del helper de fechas) y quedó en verde de forma
+determinística — se corrió repetidamente tras el fix del bug #1 para
+confirmar que ya no depende de la hora del día, a diferencia del estado
+anterior donde `futbolero-cancelar-reserva.spec.ts` solo fallaba cuando el
+reloj del browser y el calendario CR discrepaban al momento de correrlo.
+
+**Handoff completo para el pase a producción** (bugs, fixes, verificación,
+checklist pre-deploy, estado de git) en `HANDOFF-PRODUCCION.md`, nuevo en la
+raíz del repo. El trabajo sigue en la rama `test/fases-1-6-testing-infra`,
+no en `main` — falta abrir PR antes de que esto sea "producción" en el
+sentido estricto.
+
+## 2026-09-18 (8) — UAT report recibido; intento de correr la suite Playwright bloqueado (Docker no disponible) + `.env.local` sigue apuntando a producción
+
+Pedido del usuario: retomar el trabajo a partir de `UAT-Report-Dale-Cancha.md`
+(walkthrough manual vía Chrome + 7 specs Playwright escritos en la sesión
+anterior, 2 bugs encontrados). Se priorizó primero correr la suite antes de
+tocar código, para confirmar bug #1 con un test real en vez de solo lectura.
+
+**Bloqueado**: `npx supabase status` / `npx supabase start` fallan con
+`docker: command not found (podman also not found)`. A diferencia de la
+sesión de `HANDOFF-TESTING.md` (que instaló y dejó Docker Desktop corriendo),
+en esta Mac Docker no está instalado (no aparece en `/Applications`, no hay
+`docker`/`podman`/`colima`/`lima` en PATH). Tampoco hay Homebrew instalado
+para instalarlo desde acá, y el proxy de red de esta sesión devuelve 403 al
+intentar `formulae.brew.sh` — instalar Docker Desktop requiere un instalador
+gráfico que este agente no puede correr por shell. **Acción pendiente,
+bloqueante, para el usuario**: instalar Docker Desktop (o Podman) en esta
+Mac; después, `npx supabase start && npx playwright test e2e/` debería
+correr igual que en la sesión anterior (6/7 verdes esperados,
+`futbolero-cancelar-reserva.spec.ts` en rojo por el bug #1, ver abajo).
+
+**Hallazgo adicional, separado del UAT**: `.env.local` en este momento
+apunta de nuevo a producción (`NEXT_PUBLIC_SUPABASE_URL=https://pjpfkqfkbqbpjxuulnea.supabase.co`).
+El `npm run dev` "arreglado" que menciona el UAT report fue, todo indica,
+una exportación de variables de entorno en esa terminal (no persistida al
+archivo) — así que un `npm run dev` normal hoy, sin exportar nada a mano,
+volvería a levantar contra producción. `playwright.config.ts` ya tiene su
+propio guard (fuerza las credenciales locales antes de levantar el
+`webServer`, ver D-anterior en este mismo archivo), así que la suite E2E no
+corre este riesgo — pero el desarrollo manual día a día sí. Sugerencia no
+implementada todavía: mover `.env.local` a valores locales por defecto y
+usar `.env.production.local` (gitignoreado, fuera del working directory
+normal) solo cuando se necesite apuntar a producción a propósito.
+
+**Resumen de bugs del UAT, para priorizar** (detalle completo en
+`UAT-Report-Dale-Cancha.md`, escrito por el usuario a partir de la sesión de
+QA):
+1. **HIGH** — `components/shared/SlotPicker.tsx` calcula "hoy" con
+   `new Date()` del browser en vez de recibir `hoyCR()` del server
+   (`app/futbolero/canchas/[canchaId]/page.tsx` ya lo calcula, línea 36,
+   pero no se lo pasa como prop al componente). Confirmado por inspección de
+   código en esta sesión — el fix es agregar un prop `hoy: string` a
+   `SlotPicker` y usarlo en vez de `new Date()`.
+2. **MEDIUM** — Label del day-tab seleccionado se vuelve invisible (pero el
+   tab sigue funcional) tras elegir un horario en un día que no es "Hoy".
+   Sospecha sin confirmar: `components/ui/tabs.tsx` (`TabsTrigger`) ya trae
+   clases base `data-active:bg-background data-active:text-foreground`, y
+   `SlotPicker.tsx` las pisa con `data-active:bg-primary
+   data-active:text-primary-foreground` vía `className` — con Tailwind v4 y
+   `cn()` (revisar si hace merge tipo `tailwind-merge` o solo concatena), el
+   orden de las clases en el `class` final, no el orden en el código fuente,
+   decide cuál gana; si no hay merge real, es una carrera de especificidad
+   que puede resolver distinto según el build. Pendiente de confirmar antes
+   de tocar el componente compartido (`tabs.tsx` lo usan otras pantallas).
+
+**Siguiente paso, según lo acordado con el usuario**: instalar Docker en
+esta Mac y volver a intentar la suite; mientras tanto, el bug #1 puede
+arreglarse y verificarse manualmente (sin Playwright) porque el diagnóstico
+por código ya es sólido.
+
+
 ## 2026-09-18 (7) — Bug crítico encontrado en QA E2E: TODAS las reservas 404an en su detalle (migración de cobro grupal nunca aplicada a producción)
 
 Pedido del usuario: "exercise end to end ui testing" contra el Preview real

@@ -95,10 +95,15 @@ export async function sembrarReservaPendiente() {
   return { ...cancha, futboleroId, futboleroEmail, reservaId };
 }
 
-function fechaEnDias(n: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+// CR-timezone-aware, igual que hoyCR()/sumarDiasCR() en lib/fecha.ts --
+// new Date()/toISOString() plano deriva un día si el runner corre después
+// de las 6pm hora CR (UTC ya cruzó medianoche). Ver bug #1 del UAT.
+export function fechaEnDias(n: number): string {
+  const hoy = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Costa_Rica" }).format(new Date());
+  const [anio, mes, dia] = hoy.split("-").map(Number);
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia, 12));
+  fecha.setUTCDate(fecha.getUTCDate() + n);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Costa_Rica" }).format(fecha);
 }
 
 /** Borra en cascada (reservas -> slots vía cancha, usuarios vía auth.users) todo lo sembrado por un test. */
