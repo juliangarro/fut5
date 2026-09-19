@@ -329,3 +329,114 @@ contra datos reales, confirmar a mano, borrar. Cubre "¿el cálculo da un
 número razonable hoy?", no reemplaza los casos negativos/de borde de 7.1-7.5
 (esos no se pueden probar a mano de forma confiable — son exactamente el
 tipo de caso que un test automatizado existe para cubrir).
+
+## 8. QA manual dirigido en Preview — "como usuario" (UI/visual)
+
+*Agregado 2026-09-18, a raíz de una sesión de debugging real contra el deploy de
+Preview (`fut5-bv3a8fcx5-...vercel.app`) que encontró 4 bugs en menos de una hora
+— ninguno de los cuales las Fases 1-6 de arriba habrían atrapado, ni lo harían si
+se ampliara su cobertura de línea. No reemplaza nada de lo anterior; es la capa que
+falta arriba de la pirámide, explícitamente dejada fuera en la sección 4
+("componentes de presentación... mejor revisión visual manual") sin nunca decir
+*cómo* ni *cuándo* hacer esa revisión. Esta sección lo hace concreto.*
+
+### 8.0 Por qué es una capa aparte, no "más E2E"
+
+Los 4 bugs de la sesión del 18 de septiembre, y por qué ninguna capa de arriba los
+agarra:
+
+| Bug | Por qué Fases 1-6 no lo cubren |
+|---|---|
+| Reintento de subida de comprobante rechazado con 409 falso (`ComprobanteUploader` y `PaginaAporte`) | El mock de Supabase en Fase 4 arma el estado que el test le pide — nadie escribió el caso "el estado ya cambió cuando llega el reintento" hasta que pasó de verdad. Es un gap de *caso*, no de herramienta: un test de Vitest lo hubiera atrapado si alguien lo hubiera pensado antes. |
+| `IngresosTrend` (gráfico SVG) desproporcionado en desktop ancho | Vitest + Testing Library corre sobre jsdom: **no hay layout real**, `width`/`height`/viewBox de un SVG no se resuelven a píxeles como en un navegador. Este bug es estructuralmente invisible a Fase 5 sin importar cuántos tests se agreguen ahí. |
+| Comprobante chico en el `Dialog` de `ColaValidacion` | Mismo problema: es un juicio de "¿esto se ve bien a este ancho de viewport?", no una aserción de DOM. Ni jsdom ni un assert de Playwright sobre `toBeVisible()` capturan "se ve chico". |
+| 404/pantalla negra por `notFound()` en vez de `redirect()` + sin `not-found.tsx`/`global-error.tsx` propios | Esto sí era testeable con Vitest (un test de la ruta con `!user` → assert redirect) — es un caso real de "gap de cobertura", no de herramienta. Lo nuevo (`app/not-found.tsx`, `app/global-error.tsx`) hoy no tiene test de que se vean bien; ver 8.3. |
+
+Conclusión operativa: 3 de los 4 bugs son de **percepción visual/proporción**, la
+categoría que ninguna herramienta de assertions atrapa bien todavía (visual
+regression con screenshots serviría, pero con un solo dev y sin CI el costo de
+mantener baselines no se justifica hoy — ver "Qué no vale la pena automatizar").
+La respuesta no es más Vitest, es una pasada manual dirigida, con checklist, hecha
+como usuario real en el entorno real (Preview, no `next dev` local) — porque el bug
+del gráfico y el de Vercel Auth de abajo (8.1) solo existen ahí, no en local.
+
+### 8.1 Restricción dura: Preview tiene Vercel Authentication activado
+
+Se descubrió en esta misma sesión: el navegador del agente (Claude in Chrome / el
+browser embebido) no puede abrir `https://fut5-bv3a8fcx5-...vercel.app` directo —
+Vercel Authentication redirige a un login de Vercel al que el agente no tiene
+credenciales. Esto significa que **hoy esta pasada solo la puede hacer un humano**
+(el usuario, logueado en su cuenta de Vercel) — un agente no puede correrla sin
+ayuda. Dos formas de arreglar eso si se quiere que un agente la corra en el futuro:
+
+1. **Vercel Protection Bypass for Automation**: Project Settings → Deployment
+   Protection → generar un secret, y pasarlo como header
+   `x-vercel-protection-bypass: <secret>` (o query param
+   `?x-vercel-protection-bypass=<secret>&x-vercel-set-bypass-cookie=true` para que
+   el navegador lo recuerde en cookies). Es la vía soportada por Vercel para esto
+   exacto — no requiere desactivar la protección del proyecto.
+2. Desactivar Vercel Authentication solo para Preview deployments (dejarla en
+   producción) — más simple, pero expone el Preview (con datos reales de
+   producción, ver `HANDOFF.md` — un solo Supabase) a cualquiera con el link.
+   **No recomendado** dado ese riesgo; la opción 1 es la correcta acá.
+
+Mientras no se configure la opción 1, esta sección es una guía para que el usuario
+la corra él mismo (con este checklist a mano), no algo que Claude pueda ejecutar de
+punta a punta sin intervención.
+
+### 8.2 Cuándo correrla
+
+No en cada commit — es cara y depende de un humano. Disparadores:
+
+- Antes de mergear cualquier PR/rama que toque `components/**/*.tsx` (estilos,
+  layout, SVG a mano como `IngresosTrend`/`OcupacionHeatmap`) — la categoría exacta
+  que 8.0 muestra que las otras fases no cubren.
+- Después de cualquier cambio a `app/globals.css` (tokens de color/tema) — riesgo de
+  romper contraste o el fondo de `not-found.tsx`/`global-error.tsx` (ver 8.3).
+- Una vez por sesión de trabajo del usuario contra Preview, con el rol que esté
+  usando ese día (Futbolero o AdminCancha) — barrido oportunista, no exhaustivo.
+- **No** hace falta correrla en ramas que solo tocan `lib/`, `supabase/migrations/`
+  o rutas API sin cambio de componente — esas ya las cubren las Fases 1-4.
+
+### 8.3 Checklist — qué mirar, no solo qué clickear
+
+Dos anchos de viewport siempre (mismos que ya usa `HANDOFF.md` para el rediseño):
+**390px** (mobile) y **1280px** (desktop) — el bug de `IngresosTrend` de hoy *solo*
+aparece en el ancho grande, así que probar solo mobile (como es el hábito, dado que
+la app es mobile-first) lo deja pasar siempre.
+
+**Como Futbolero:**
+- [ ] Buscar cancha → detalle → reservar un slot → subir comprobante. Con conexión
+  normal (no solo el camino dorado feliz de Fase 6): ¿el botón "Enviar" da feedback
+  correcto si se hace doble click rápido? ¿Y si se cierra la pestaña a mitad de
+  "Enviando…" y se vuelve a abrir la reserva — qué estado se ve?
+- [ ] "Mis reservas" → abrir una reserva, dejar la pestaña abierta 10+ minutos
+  (simula sesión por expirar), volver y navegar a otra reserva — ¿redirige a login
+  limpio, o algo raro? (el bug de la entrada (5) de `DECISIONS.md` de hoy).
+- [ ] Forzar una URL de reserva que no existe (`/futbolero/reservas/id-inventado`) —
+  ¿se ve el `not-found.tsx` nuevo, con el fondo crema y el botón "Volver al inicio",
+  o todavía algo en blanco?
+
+**Como AdminCancha:**
+- [ ] `/admin/insights`, período 7/30/90 días, **en 1280px**: ¿la barra más alta del
+  gráfico de ingresos se corta arriba? ¿las etiquetas de semana se solapan? (el bug
+  de hoy — usar esto como el caso de referencia de "qué se ve mal" hasta que se
+  agregue un test visual).
+- [ ] Cola de validaciones → tocar un comprobante para verlo a tamaño completo, en
+  1280px: ¿se lee el monto/número SINPE sin tener que hacer zoom del navegador?
+  (R7 en `plan-rediseno-dale-cancha.md`, todavía sin fix).
+- [ ] `OcupacionHeatmap` con muy pocos datos (cancha nueva) y con muchos (varias
+  semanas) — mismo tipo de riesgo de escala que `IngresosTrend`, no verificado hoy.
+- [ ] Forzar un error real (ej. cortar la red en devtools a mitad de "Confirmar
+  reserva") — ¿aparece el `global-error.tsx` nuevo con el botón "Reintentar", o una
+  pantalla en blanco/negra?
+
+### 8.4 Qué hacer con lo que se encuentre
+
+Un hallazgo de esta pasada **no es un test automatizado que falta** — es texto en
+`DECISIONS.md` (si ya se corrigió) o una fila nueva en la tabla de riesgos de
+`plan-rediseno-dale-cancha.md` sección 6 (si queda pendiente), igual que R7 y las
+entradas (4)-(6) de `DECISIONS.md` de hoy. Si el mismo tipo de bug aparece dos veces
+(ej. otro SVG a mano que se desproporciona), ahí sí vale la pena evaluar visual
+regression testing (Playwright `toHaveScreenshot()`) como Fase 9 — no antes, para no
+pagar el costo de mantener baselines por un solo caso.

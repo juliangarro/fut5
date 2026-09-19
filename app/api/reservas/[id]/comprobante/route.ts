@@ -28,6 +28,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
   if (reserva.estado !== "creada") {
+    // "pendiente_validacion" significa que un envío anterior de este mismo
+    // futbolero ya subió el comprobante y el trigger sincronizar_estado_reserva
+    // ya movió creada -> pendiente_validacion. Con mala señal (contexto real
+    // en Costa Rica, ver subirConReintentos) el cliente puede no haber recibido
+    // esa respuesta 200 y reintentar el mismo POST: como ya se logró el
+    // objetivo (hay comprobante registrado), respondemos ok en vez de 409 para
+    // que el reintento no se muestre como error. Otros estados (confirmada,
+    // rechazada, expirada, cancelada) sí deben seguir rechazando el reintento.
+    if (reserva.estado === "pendiente_validacion") {
+      return NextResponse.json({ ok: true, already: true });
+    }
     return NextResponse.json(
       { error: "Esta reserva ya tiene un comprobante o ya no acepta uno." },
       { status: 409 }

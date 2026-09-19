@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerUrlComprobanteFirmada } from "@/lib/obtenerUrlComprobanteFirmada";
@@ -17,7 +17,15 @@ export default async function ReservaDetallePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) notFound();
+  // Nota (2026-09-18): antes era `if (!user) notFound()`, inconsistente con
+  // el resto de la app (todas las demás páginas protegidas hacen
+  // redirect("/login")). Si la sesión expira o el refresh de cookie en
+  // proxy.ts no llega a tiempo mientras el futbolero navega rápido entre
+  // pantallas, este notFound() mostraba un 404 desnudo (sin
+  // app/not-found.tsx propio hasta ahora) en vez de mandarlo a loguearse de
+  // nuevo — reportado por el usuario como "404 y pantalla negra al moverme
+  // entre acciones".
+  if (!user) redirect("/login");
 
   const { data: reserva } = await supabase
     .from("reservas")

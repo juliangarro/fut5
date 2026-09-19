@@ -37,6 +37,17 @@ export async function POST(
   if (reserva.estado !== "creada") {
     return NextResponse.json({ error: "Esta reserva ya no está aceptando pagos." }, { status: 409 });
   }
+  // Mismo patrón que app/api/reservas/[id]/comprobante/route.ts (ver
+  // DECISIONS.md 2026-09-18): con mala señal, el cliente puede no recibir la
+  // respuesta 200 de un envío que sí llegó a subir el archivo y mover el
+  // aporte a "comprobante_subido", y su propio reintento automático
+  // (`subirComprobante` en PaginaAporte.tsx) vuelve a golpear esta ruta. Sin
+  // este caso, ese reintento legítimo se rechazaba con el mismo 409 que un
+  // aporte realmente cerrado — el objetivo (comprobante registrado) ya se
+  // había cumplido. "confirmado" sí sigue bloqueando: ese es un cierre real.
+  if (aporte.estado === "comprobante_subido") {
+    return NextResponse.json({ ok: true, already: true });
+  }
   if (aporte.estado !== "pendiente" && aporte.estado !== "rechazado") {
     return NextResponse.json({ error: "Este aporte ya tiene un comprobante en revisión." }, { status: 409 });
   }

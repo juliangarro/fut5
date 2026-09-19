@@ -3,6 +3,131 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-18 (6) — Fix: mismo bug de reintento no-idempotente en el comprobante de aportes (cobro grupal)
+
+Pedido del usuario: "inspect for any smells" sobre el repo. Al revisar
+`components/pago/PaginaAporte.tsx` encontré que su función
+`subirComprobante` es casi un calco de `subirConReintentos` en
+`ComprobanteUploader.tsx` (mismos reintentos, mismo timeout, misma lógica
+de status code) — y que la ruta a la que le pega,
+`app/api/pago/[token]/aportes/[aporteId]/comprobante/route.ts`, tenía
+exactamente el mismo bug que ya se había corregido hoy en
+`app/api/reservas/[id]/comprobante/route.ts` (ver entrada (4)... la (1)
+de la sesión de hoy, arriba): un reintento tras un timeout con la subida
+ya exitosa del lado del servidor (aporte movido a `comprobante_subido`)
+se rechazaba con 409 "Este aporte ya tiene un comprobante en revisión."
+en vez de tratarse como éxito idempotente.
+
+Fix (mismo patrón): si `aporte.estado === "comprobante_subido"`, la ruta
+ahora responde `200 { ok: true, already: true }` en vez de 409.
+`"confirmado"` sigue bloqueando — ese sí es un cierre real, no algo que
+un reintento propio deba superar.
+
+**No agregué test para este archivo** — no existía ninguno
+(`app/api/pago/[token]/aportes/[aporteId]/comprobante/route.ts` no tenía
+`route.test.ts`, ni tampoco `app/api/aportes/[id]/confirmar/route.ts`) y
+con el `node_modules`/`rolldown` roto de esta sesión (ver entrada (4)) no
+podía correr vitest para verificar uno antes de dejarlo escrito — preferí
+no comitear un test sin ejecutar. Pendiente una vez se reinstale
+`node_modules`: escribir `route.test.ts` para esta ruta espejando
+`app/api/reservas/[id]/comprobante/route.test.ts` (incluyendo el caso
+`comprobante_subido` → 200 idempotente).
+
+`npx tsc --noEmit` limpio.
+
+## 2026-09-18 (5) — Fix: 404 y "pantalla negra" al navegar entre acciones
+
+Reportado por el usuario: "a veces recibo un 404 y pantalla negra al
+moverme entre acciones", sin pasos exactos de reproducción. Intenté
+reproducirlo en vivo contra el deploy de preview
+(`fut5-bv3a8fcx5-juliangarro26-4741s-projects.vercel.app`) con el
+navegador del agente, pero esa URL tiene Vercel Authentication activado
+(protección de preview deployments) y redirige a un login de Vercel al
+que el agente no tiene acceso — no se pudo reproducir en vivo, el
+diagnóstico de abajo sale de revisar el código.
+
+Dos hallazgos que combinados explican ambos síntomas:
+
+1. **`app/futbolero/reservas/[reservaId]/page.tsx` usaba `notFound()` para
+   el chequeo de sesión** (`if (!user) notFound()`), a diferencia de
+   *todas* las demás páginas protegidas del repo, que usan
+   `redirect("/login")` (`app/futbolero/perfil/page.tsx`,
+   `app/admin/canchas/page.tsx`, etc. — grep de `if (!user)` en `app/`
+   los confirma). Si la sesión expira o el refresh de cookie en
+   `proxy.ts`/`lib/supabase/middleware.ts` no llega a tiempo mientras el
+   futbolero navega rápido entre pantallas (típicamente entrando a "Mis
+   reservas" → detalle de una reserva), esta página mostraba un 404 en
+   vez de mandar a loguearse de nuevo como en cualquier otro lugar de la
+   app.
+2. **No existía `app/not-found.tsx` ni `app/error.tsx` ni
+   `app/global-error.tsx`** en todo el proyecto. Sin un `not-found.tsx`
+   propio, cualquier `notFound()` (el del punto 1, u otro legítimo)
+   mostraba la página 404 genérica de Next, sin el fondo crema ni el
+   sistema de diseño — no es negra por sí sola, pero no tiene ninguna
+   relación visual con el resto de la app. El caso más grave es sin
+   `global-error.tsx`: una excepción no capturada que escapa incluso del
+   `RootLayout` (ej. algo que tira antes de que el `<body>` con el fondo
+   crema llegue a pintarse) hace que Next dibuje su propio documento de
+   emergencia sin ningún estilo — en un sistema con modo oscuro (SO o
+   navegador) esa página en blanco sin CSS puede pintarse casi negra,
+   calzando con el reporte de "pantalla negra".
+
+Fix:
+- `reservas/[reservaId]/page.tsx`: `notFound()` → `redirect("/login")`
+  para el chequeo de sesión, igual que el resto del repo.
+- `app/not-found.tsx`: página 404 con el sistema de diseño (`EmptyState`
+  visualmente, ícono + texto + botón "Volver al inicio"), en vez de la
+  genérica de Next.
+- `app/global-error.tsx`: página de error de emergencia con el mismo
+  fondo crema de la app (tiene que traer su propio `<html>`/`<body>`
+  porque reemplaza el layout entero, no solo el contenido) y un botón
+  "Reintentar".
+
+No cubre todas las causas posibles de un 404 real (ej. R1/R2 de
+plan-rediseno-dale-cancha.md — reservas `creada` sin expiración, cron una
+vez al día — pueden dejar recursos en estados raros que sí ameritan un
+404 legítimo). Lo que este fix corrige es que ese 404, legítimo o no, ya
+no se vea como una pantalla en blanco sin marca, y que el caso específico
+de sesión vencida en la página de detalle de reserva ya no se confunda
+con "la reserva no existe". `npx tsc --noEmit` limpio; no se corrió el
+suite de tests por el mismo problema de `node_modules`/`rolldown` roto
+mencionado en la entrada anterior — no relacionado a este cambio.
+
+Pendiente si el usuario puede reproducirlo de nuevo: capturar la URL
+exacta donde pasa y si la consola del navegador muestra algún error (F12
+→ Console) en el momento del 404/pantalla negra — eso confirmaría si es
+este bug de sesión u otra causa (ej. una `notFound()` distinta con datos
+realmente ausentes por R1/R2).
+
+## 2026-09-18 (4) — Fix: gráfico de `IngresosTrend` desproporcionado en desktop
+
+Reportado por el usuario con captura de `/admin/insights`: la barra de la
+semana con más ingresos aparecía cortada arriba (etiqueta "155k" fuera de
+vista) y las etiquetas "Sem 1"..."Sem 5" se veían pegadas sin espacio,
+todo dibujado varias veces más grande de lo normal.
+
+Causa: el `<svg>` de `components/admin/IngresosTrend.tsx` (Fase 12 del
+rediseño, ver plan-rediseno-dale-cancha.md) usaba `width="100%"` sin
+`height`, tal como lo pedía el plan ("responsivo"). Sin un `height`
+explícito, el navegador deriva el alto del aspect ratio del `viewBox`
+(`ancho × (ALTO+24)`, con `ancho` chico — 192px para 5 semanas) y lo
+escala para llenar el ancho real del contenedor. En un panel de admin
+ancho en desktop eso multiplica todo (barras, texto de 12/13px, gap) por
+un factor grande — de ahí el valor cortado arriba y las etiquetas
+solapadas: no es un problema de datos, es que todo el SVG se infló.
+
+Fix: `width={ancho}` y `height={ALTO + 24}` fijos en vez de `width="100%"`.
+El gráfico ahora se dibuja siempre a su tamaño de diseño; `overflow-x-auto`
+del contenedor (ya existía) sigue resolviendo el desborde en pantallas
+angostas. Esto es una corrección sobre lo que decía el plan en Fase 12
+("SVG con viewBox y width=\"100%\" (responsivo)") — el enunciado asumía
+que "responsivo" implicaba solo estirar el ancho, pero sin alto fijo
+termina estirando todo el dibujo. `npx tsc --noEmit` limpio; no se corrió
+el suite de tests porque `node_modules` tiene un binario nativo de
+`rolldown` roto en este entorno (bug conocido de npm con dependencias
+opcionales, no relacionado a este cambio) — reinstalar `node_modules` lo
+resolvería, pendiente de que el usuario lo confirme.
+
 ## 2026-09-18 (3) — Insights Pro en `/admin/insights` (los 4 adicionales de §2 del plan)
 
 El dashboard base (`/admin/insights`) ya existía gratis para todos (ver

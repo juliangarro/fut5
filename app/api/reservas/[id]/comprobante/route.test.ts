@@ -72,12 +72,28 @@ describe("POST /api/reservas/[id]/comprobante", () => {
     expect(res.status).toBe(403);
   });
 
-  test("la reserva ya no está en creada -> 409", async () => {
-    const { supabase } = mockConReserva({ estado: "pendiente_validacion" });
+  test("la reserva ya está pendiente_validacion (reintento tras timeout) -> 200 idempotente", async () => {
+    // El envío anterior de este mismo futbolero ya subió el comprobante y el
+    // trigger movió creada -> pendiente_validacion, pero el cliente no vio esa
+    // respuesta (timeout con mala señal) y reintenta el mismo POST. No debe
+    // tratarse como error: el objetivo (comprobante registrado) ya se cumplió.
+    const { supabase, upload } = mockConReserva({ estado: "pendiente_validacion" });
     mockCreateClient.mockReturnValue(supabase);
     const res = await POST(req(archivo()), params());
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, already: true });
+    expect(upload).not.toHaveBeenCalled();
   });
+
+  test.each(["confirmada", "rechazada", "expirada", "cancelada"] as const)(
+    "la reserva está en %s -> 409",
+    async (estado) => {
+      const { supabase } = mockConReserva({ estado });
+      mockCreateClient.mockReturnValue(supabase);
+      const res = await POST(req(archivo()), params());
+      expect(res.status).toBe(409);
+    }
+  );
 
   test("sin archivo -> 400", async () => {
     const { supabase } = mockConReserva();
