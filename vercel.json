@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/expirar-reservas",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/vencer-suscripciones",
+      "schedule": "30 9 * * *"
     }
   ]
 }

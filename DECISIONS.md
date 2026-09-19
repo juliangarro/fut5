@@ -3,6 +3,130 @@
 Ver SPEC.md 10.7. Registro breve de decisiones no cubiertas explícitamente por
 SPEC.md, para que el siguiente agente no tenga que re-descubrir el contexto.
 
+## 2026-09-18 (3) — Insights Pro en `/admin/insights` (los 4 adicionales de §2 del plan)
+
+El dashboard base (`/admin/insights`) ya existía gratis para todos (ver
+entrada "2026-09-15 — Dashboard de insights" más abajo). Esta entrada
+agrega los 4 insights adicionales de `plan-monetizacion-admin.md` sección
+2 ("Insights adicionales que agregaría para el tier pago"), gateados
+detrás de `nivelDeAcceso` — nuevo archivo `lib/insightsPro.ts`, sección
+nueva en `app/admin/insights/page.tsx` (upsell si `nivelDeAcceso ===
+'gratis'`, insights reales si no).
+
+- **Horario más rentable / hora con menos ocupación**: agrupa
+  ingreso/ocupación por franja horaria dentro del período seleccionado.
+  `horaMenosOcupada` exige mínimo 3 slots en la franja para no sacar
+  conclusiones de una sola franja con 1-2 horarios.
+- **Alertas proactivas**: comprobantes con +20 min sin validar (consulta
+  en vivo, sin filtro de período) y caída de ocupación semana vs. semana
+  anterior (umbral: solo alerta si cae ≥10 puntos, para no generar ruido
+  por fluctuaciones menores).
+- **Predicción simple de demanda**: media móvil de 6 semanas por (día de
+  semana, hora) — compara promedio de las 3 semanas recientes vs. las 3
+  anteriores, exige ≥2 reservas/semana de señal reciente y ≥30% de
+  crecimiento para reportar. Sin ML, tal como pide la sección 2.
+- **Benchmark de plataforma (comparación anónima de ocupación)**: acá
+  hubo una corrección sobre lo que le dije al usuario antes de construir
+  — asumí que hacía falta una función SQL `security definer` + migración
+  nueva para leer datos de canchas ajenas. Al revisar la RLS existente,
+  `slots` ya tiene `slots_select_publico for select using (true)`
+  (00000000000001/3, no es nuevo) — así que el benchmark de **ocupación**
+  se puede calcular con la sesión normal del admin, sin función nueva ni
+  migración, filtrando en JS las canchas propias del resto. Ingresos NO
+  se pueden benchmarkear igual (`reservas.monto` de otros admins sí está
+  protegido por RLS) — eso sí necesitaría una función nueva, fuera de
+  alcance de esta entrada. Guardia de anonimato: mínimo 5 canchas ajenas
+  en la muestra (sugerido por el usuario), si no `benchmarkOcupacion` es
+  `null`.
+
+**Verificado contra producción** (mismo patrón que la entrada del
+2026-09-15: datos reales, sin fabricar filas en `reservas`/`slots`):
+script Node con service role que (1) encontró un admin real con canchas y
+reservas confirmadas, (2) confirmó `suscripciones` vacío = gratis, (3)
+insertó una fila de prueba `tier='pro'`, (4) confirmó la relectura, (5)
+corrió la misma lógica de agregación que `lib/insightsPro.ts` contra los
+datos reales de ese admin y verificó a mano que `ingresoPorHora` suma
+igual al ingreso total, que `horaMasRentable` señala la franja correcta,
+y que `benchmarkOcupacion` da `null` correctamente porque la plataforma
+piloto hoy solo tiene 3 canchas ajenas (bajo el mínimo de 5) — la guardia
+de anonimato funciona como se diseñó. (6) borró la fila de prueba y
+confirmó que no quedó rastro. `npx tsc --noEmit` y `npm run lint`
+también limpios.
+
+## 2026-09-18 (2) — Decisiones de negocio pendientes en plan-monetizacion-admin.md §7
+
+Cuatro de las cinco preguntas abiertas de la sección 7 del plan, resueltas
+por el usuario con contexto completo de SPEC.md/DECISIONS.md/el pivote a
+"Dale Cancha" (detalle y razonamiento completo en el plan, sección 7):
+
+1. **Precio Pro/Pro+**: se mantiene el rango de la sección 1 (~₡10,000 /
+   ~₡20,000) como ancla, se fija en firme después del piloto (SPEC.md
+   12.1), no antes. **Precio de "Destacado"/moderación**: ₡3,000-5,000/mes
+   por cancha destacada — bajo a propósito, compite por el mismo
+   presupuesto que Pro y el AdminCancha típico es sensible a precio.
+2. **Tier gratis**: ilimitado, sin topes de canchas/reservas — meter un
+   tope apilaría fricción justo donde el plan dice que no hay que
+   apilarla (riesgo #1: que ni prueben el flujo).
+4. **Automatizar reactivación de pago**: no ahora, pero con gatillo
+   concreto (>15-20 cuentas pagando activas, u ops reportando >X
+   min/semana), no "cuando duela" — para que no sea deuda técnica
+   invisible.
+
+**Sin resolver (3 y 5), explícitamente dejadas pendientes por el
+usuario:** la interpretación de "sin importar filtros" para Destacado
+(sección 6.2 del plan), y la dependencia de login real (Fase 1 del
+roadmap) que bloquea Destacado/moderación por completo — esta última es
+la que manda: aunque 1 y 3 tengan respuesta, no tiene sentido construir
+ese código hasta que exista login real.
+
+No se tocó código en esta entrada — solo se actualizó
+`plan-monetizacion-admin.md` (secciones 1, 4.2, 6.3, 7) para reflejar
+estas decisiones.
+
+## 2026-09-18 — Infraestructura de monetización admin (suscripciones + add-ons)
+
+Ver `plan-monetizacion-admin.md` sección 6 para el diseño completo. Rumbo
+aprobado por el usuario el mismo día (sección 6.0 del plan): "Destacado" y
+moderación de reportes son un **add-on separado**, no empaquetado dentro
+de los tiers Pro/Pro+; la suscripción es **por cuenta AdminCancha**, no
+por cancha.
+
+Construido en esta pasada: migraciones `00000000000009`–`00000000000011`
+(tablas `suscripciones` y `addons_suscripcion`, función
+`vencer_suscripciones_y_addons`), su rollback combinado en
+`supabase/rollback/`, `lib/suscripciones.ts` (gating: `nivelDeAcceso`,
+`tieneDestacado`, `tieneModeracionReportes`), tipos en
+`lib/types/database.ts`, y el cron
+`app/api/cron/vencer-suscripciones/route.ts` + entrada en `vercel.json`.
+`npx tsc --noEmit` y `npm run lint` limpios.
+
+Dos ajustes sobre el borrador del plan, documentados en detalle en la
+sección 6.4 del plan:
+- Se agregó una policy de SELECT público en `addons_suscripcion` para
+  `destacado` activo — sin ella el listado de búsqueda del Futbolero no
+  podría leer qué canchas están destacadas. Es información pública por
+  diseño (se muestra como "Patrocinado"), no una relajación riesgosa.
+- El kill switch `monetizacion_habilitada` (fail-open) solo aplica a
+  `nivelDeAcceso`, no a los add-ons — un bug en el add-on oculta como
+  mucho una promoción ya pagada, no bloquea el uso del producto; tratarlo
+  igual hubiera marcado a todas las canchas como destacadas al apagarlo.
+
+**Deliberadamente sin tocar todavía** (mismo criterio que ya aplica el
+repo — migrar la UI cuando se construye la feature consumidora, no
+antes): el `sort` de `ListaCanchas.tsx` no usa `tieneDestacado`, el
+dashboard de insights y el botón de reportar comentario no existen. La
+interpretación de "sin importar filtros" para "Destacado" (6.2 del plan)
+sigue sin confirmar con Pamela — bloquea conectar el gating a
+`ListaCanchas.tsx`, no el resto del modelo.
+
+**Actualización 2026-09-18 (mismo día):** el usuario corrió las 3
+migraciones (009-011) contra el proyecto Supabase real vía SQL Editor —
+las tres reportaron éxito. La base ya tenía 001-008 aplicadas de antes de
+esta sesión. A partir de este momento `suscripciones` y
+`addons_suscripcion` existen de verdad, con RLS activo — cualquier cambio
+futuro a estas tablas necesita una migración nueva, no editar las
+009-011 in place.
+
 ## 2026-09-16 — Cierre del rediseño Organic (Fases 0-13 de plan-rediseno-dale-cancha.md)
 
 Las 13 fases del rediseño se ejecutaron de corrido en la rama

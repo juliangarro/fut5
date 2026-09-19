@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerUrlComprobanteFirmada } from "@/lib/obtenerUrlComprobanteFirmada";
 import { ReservaEstado } from "@/components/ReservaEstado";
+import { cobroGrupalHabilitado } from "@/lib/featureFlags";
 import { cancelarReserva } from "./actions";
 
 export default async function ReservaDetallePage({
@@ -20,12 +22,34 @@ export default async function ReservaDetallePage({
   const { data: reserva } = await supabase
     .from("reservas")
     .select(
-      "id, futbolero_id, estado, monto, motivo_rechazo, expira_at, slot_id, comprobante_url, comprobante_subido_at"
+      "id, futbolero_id, estado, monto, motivo_rechazo, expira_at, slot_id, comprobante_url, comprobante_subido_at, modo_cobro, token_cobro, cantidad_aportes"
     )
     .eq("id", reservaId)
     .single();
 
   if (!reserva || reserva.futbolero_id !== user.id) notFound();
+
+  const { data: aportes } =
+    reserva.modo_cobro === "grupal"
+      ? await supabase
+          .from("aportes")
+          .select("id, nombre, estado")
+          .eq("reserva_id", reserva.id)
+          .order("created_at", { ascending: true })
+      : { data: [] };
+
+  // "origin" no siempre viene en una navegación GET normal (solo en
+  // requests cross-origin) — se arma a partir de "host" + protocolo, como
+  // hace Next internamente para request.nextUrl.origin en un Route Handler.
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "";
+  const protocolo = host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https";
+  const origenSitio = host ? `${protocolo}://${host}` : "";
+
+  // El flag solo bloquea ARRANCAR un cobro grupal nuevo — una reserva que ya
+  // está en modo_cobro='grupal' sigue mostrándose normal aunque se apague
+  // después (ver lib/featureFlags.ts).
+  const mostrarCobroGrupal = reserva.modo_cobro === "grupal" || (await cobroGrupalHabilitado(supabase));
 
   const { data: slot } = await supabase
     .from("slots")
@@ -57,11 +81,17 @@ export default async function ReservaDetallePage({
         motivo_rechazo: reserva.motivo_rechazo,
         expira_at: reserva.expira_at,
         comprobante_subido_at: reserva.comprobante_subido_at,
+        modo_cobro: reserva.modo_cobro,
+        token_cobro: reserva.token_cobro,
+        cantidad_aportes: reserva.cantidad_aportes,
       }}
       comprobanteUrl={comprobanteUrl}
       cancha={{ nombre: cancha.nombre, numero_sinpe: cancha.numero_sinpe, foto: cancha.fotos[0] ?? null }}
       slot={slot}
       onCancelar={cancelarReserva}
+      aportesIniciales={aportes ?? []}
+      origenSitio={origenSitio}
+      cobroGrupalHabilitado={mostrarCobroGrupal}
     />
   );
 }

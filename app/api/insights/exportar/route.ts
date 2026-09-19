@@ -3,8 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { rangoPeriodo, PERIODOS, type PeriodoKey } from "@/lib/insights";
 
 function csvEscape(valor: string) {
-  if (/[",\n]/.test(valor)) return `"${valor.replace(/"/g, '""')}"`;
-  return valor;
+  // Prefijo de comilla simple si empieza con un carácter que Excel/Sheets
+  // interpreta como inicio de fórmula (CSV/formula injection vía nombre de
+  // usuario o cancha, que son texto libre controlado por el usuario).
+  const neutralizado = /^[=+\-@\t\r]/.test(valor) ? `'${valor}` : valor;
+  if (/[",\n]/.test(neutralizado)) return `"${neutralizado.replace(/"/g, '""')}"`;
+  return neutralizado;
 }
 
 export async function GET(request: NextRequest) {

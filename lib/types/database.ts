@@ -18,6 +18,12 @@ export type EstadoReserva =
   | "cancelada";
 export type CanalNotificacion = "push" | "email";
 export type EstadoEnvioNotificacion = "pendiente" | "enviada" | "fallida";
+export type ModoCobro = "individual" | "grupal";
+export type EstadoAporte = "pendiente" | "comprobante_subido" | "confirmado" | "rechazado";
+export type TierSuscripcion = "pro" | "pro_plus";
+export type EstadoSuscripcion = "activa" | "en_gracia" | "vencida";
+export type AddonSuscripcion = "destacado" | "moderacion_reportes";
+export type EstadoAddon = "activo" | "vencido";
 
 export interface Database {
   public: {
@@ -101,6 +107,9 @@ export interface Database {
           comprobante_subido_at: string | null;
           expira_at: string | null;
           resuelta_at: string | null;
+          modo_cobro: ModoCobro;
+          token_cobro: string | null;
+          cantidad_aportes: number | null;
         };
         Insert: {
           id?: string;
@@ -112,6 +121,96 @@ export interface Database {
           comprobante_url: string;
           estado: EstadoReserva;
           motivo_rechazo: string;
+          modo_cobro: ModoCobro;
+          token_cobro: string;
+          cantidad_aportes: number;
+        }>;
+        Relationships: [];
+      };
+      aportes: {
+        Row: {
+          id: string;
+          reserva_id: string;
+          nombre: string;
+          telefono: string | null;
+          monto: number;
+          estado: EstadoAporte;
+          motivo_rechazo: string | null;
+          comprobante_url: string | null;
+          comprobante_subido_at: string | null;
+          resuelto_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          reserva_id: string;
+          nombre: string;
+          telefono?: string | null;
+          monto: number;
+        };
+        Update: Partial<{
+          estado: EstadoAporte;
+          motivo_rechazo: string | null;
+          comprobante_url: string;
+          comprobante_subido_at: string;
+          resuelto_at: string;
+        }>;
+        Relationships: [];
+      };
+      configuracion: {
+        Row: { clave: string; valor: string };
+        Insert: { clave: string; valor: string };
+        Update: Partial<{ valor: string }>;
+        Relationships: [];
+      };
+      suscripciones: {
+        Row: {
+          admin_id: string;
+          tier: TierSuscripcion;
+          estado: EstadoSuscripcion;
+          periodo_actual_fin: string;
+          gracia_hasta: string | null;
+          notas: string | null;
+          created_at: string;
+        };
+        Insert: {
+          admin_id: string;
+          tier: TierSuscripcion;
+          periodo_actual_fin: string;
+          estado?: EstadoSuscripcion;
+          gracia_hasta?: string | null;
+          notas?: string | null;
+        };
+        Update: Partial<{
+          tier: TierSuscripcion;
+          estado: EstadoSuscripcion;
+          periodo_actual_fin: string;
+          gracia_hasta: string | null;
+          notas: string | null;
+        }>;
+        Relationships: [];
+      };
+      addons_suscripcion: {
+        Row: {
+          id: string;
+          admin_id: string;
+          addon: AddonSuscripcion;
+          cancha_id: string | null;
+          estado: EstadoAddon;
+          periodo_actual_fin: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_id: string;
+          addon: AddonSuscripcion;
+          cancha_id?: string | null;
+          periodo_actual_fin: string;
+          estado?: EstadoAddon;
+        };
+        Update: Partial<{
+          estado: EstadoAddon;
+          periodo_actual_fin: string;
         }>;
         Relationships: [];
       };
@@ -159,6 +258,10 @@ export interface Database {
     Views: Record<string, never>;
     Functions: {
       expirar_reservas_vencidas: {
+        Args: Record<string, never>;
+        Returns: void;
+      };
+      vencer_suscripciones_y_addons: {
         Args: Record<string, never>;
         Returns: void;
       };
